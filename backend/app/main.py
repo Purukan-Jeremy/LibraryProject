@@ -1,17 +1,19 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from .database import get_db, engine
+from . import models
 
-app = FastAPI(title="Libriofy API")
+# Baris ini otomatis membuat tabel di MySQL berdasarkan models.py
+models.Base.metadata.create_all(bind=engine)
 
-# Biarkan Frontend Next.js kamu bisa mengakses API ini nanti
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"], # URL default Next.js
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "Selamat datang di API Libriofy!", "status": "Active"}
+@app.get("/test-db")
+def test_connection(db: Session = Depends(get_db)):
+    try:
+        # Mencoba melakukan query sederhana 'SELECT 1'
+        db.execute(text("SELECT 1"))
+        return {"status": "success", "message": "Koneksi ke MySQL Berhasil!"}
+    except Exception as e:
+        return {"status": "error", "message": f"Koneksi Gagal: {str(e)}"}
