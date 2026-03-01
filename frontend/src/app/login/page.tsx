@@ -3,20 +3,46 @@
 import React, { useState } from 'react';
 import { Book, Eye, EyeOff, Mail, Lock, ChevronLeft } from "lucide-react";
 import Link from 'next/link';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:8000/api/login", {
+        email: email,
+        password: password 
+      });
+
+      // Simpan data user ke localStorage
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      alert(`Selamat datang kembali, ${response.data.user.fullname}!`);
+      
+      // Redirect ke halaman librarypage sesuai permintaanmu
+      router.push('/librarypage'); 
+    } catch (error: any) {
+      const msg = error.response?.data?.detail || "Gagal masuk, periksa email dan password Anda";
+      alert(msg);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#fafaf9] flex flex-col items-center justify-center px-6">
+      {/* Tombol Kembali ke Landing Page */}
       <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-colors">
         <ChevronLeft className="w-5 h-5" />
         <span className="text-sm font-medium">Kembali</span>
       </Link>
 
       <div className="w-full max-w-md">
+        {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex p-3 bg-orange-800 rounded-2xl mb-4 shadow-lg shadow-orange-900/20">
             <Book className="w-8 h-8 text-stone-50" />
@@ -25,28 +51,34 @@ export default function LoginPage() {
           <p className="text-stone-500 mt-2">Masuk untuk mulai membaca buku-buku favoritmu</p>
         </div>
 
+        {/* Form Login */}
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-stone-100">
-          <form className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-stone-700 ml-1">Email</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                 <input 
                   type="email" 
+                  placeholder="nama@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="w-full pl-12 pr-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-orange-800/20 focus:border-orange-800 outline-none transition-all text-stone-800"
                 />
               </div>
             </div>
+
             <div className="space-y-2">
               <label className="text-sm font-semibold text-stone-700 ml-1">Kata Sandi</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                 <input 
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                   className="w-full pl-12 pr-12 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-orange-800/20 focus:border-orange-800 outline-none transition-all text-stone-800"
                 />
                 <button 
@@ -58,10 +90,16 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            <button className="w-full bg-stone-900 hover:bg-orange-800 text-stone-50 py-4 rounded-2xl font-bold shadow-lg shadow-stone-900/10 transition-all transform active:scale-[0.98]">
+
+            <button 
+              type="submit"
+              className="w-full bg-stone-900 hover:bg-orange-800 text-stone-50 py-4 rounded-2xl font-bold shadow-lg shadow-stone-900/10 transition-all transform active:scale-[0.98]"
+            >
               Masuk Sekarang
             </button>
           </form>
+
+          {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-stone-500 text-sm">
               Belum mempunyai akun?{' '}
