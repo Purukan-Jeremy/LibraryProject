@@ -6,5 +6,3 @@ cryptography
 python-dotenv
 pydantic[email]
 python-multipart
-cryptography pymysql
-mysqlclient cryptography
