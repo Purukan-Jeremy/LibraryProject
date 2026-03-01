@@ -20,6 +20,8 @@ export default function LibrarianDashboard() {
   // ================= STATE =================
   const [books, setBooks] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editBookId, setEditBookId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     isbn: "",
     title: "",
@@ -31,26 +33,30 @@ export default function LibrarianDashboard() {
   });
 
   // ================= FETCH BUKU DARI BACKEND =================
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/books");
+      const data = await response.json();
+
+      const formattedBooks = data.map((b: any) => ({
+        id: b.id,
+        isbn: b.isbn,
+        title: b.title,
+        author: b.author_name || "Unknown",
+        stock: b.stock,
+        file_pdf: b.file_pdf,
+        category_id: b.category_id,
+        publisher_id: b.publisher_id,
+      }));
+
+      setBooks(formattedBooks);
+    } catch (error) {
+      console.error(error);
+      alert("Gagal mengambil daftar buku dari server");
+    }
+  };
+
   useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/books");
-        const data = await response.json();
-
-        const formattedBooks = data.map((b: any) => ({
-          id: b.id,
-          title: b.title,
-          author: b.author_name || "Unknown",
-          stock: b.stock,
-        }));
-
-        setBooks(formattedBooks);
-      } catch (error) {
-        console.error(error);
-        alert("Gagal mengambil daftar buku dari server");
-      }
-    };
-
     fetchBooks();
   }, []);
 
@@ -62,11 +68,33 @@ export default function LibrarianDashboard() {
     });
   };
 
-  // ================= TAMBAH BUKU =================
+  // ================= HANDLE EDIT BUTTON =================
+  const handleEdit = (book: any) => {
+    setIsEditing(true);
+    setEditBookId(book.id);
+    setFormData({
+      isbn: book.isbn || "",
+      title: book.title || "",
+      stock: book.stock || 0,
+      file_pdf: book.file_pdf || "",
+      category_id: book.category_id || "",
+      publisher_id: book.publisher_id || "",
+      author_name: book.author || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  // ================= TAMBAH / UPDATE BUKU =================
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/books", {
-        method: "POST",
+      const url = isEditing 
+        ? `http://127.0.0.1:8000/api/books/${editBookId}`
+        : "http://127.0.0.1:8000/api/books";
+      
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           isbn: formData.isbn,
@@ -86,19 +114,13 @@ export default function LibrarianDashboard() {
         return;
       }
 
-      alert("Buku berhasil disimpan!");
+      alert(isEditing ? "Buku berhasil diperbarui!" : "Buku berhasil disimpan!");
       setIsModalOpen(false);
+      setIsEditing(false);
+      setEditBookId(null);
 
-      // Tambahkan buku baru ke state agar muncul di tabel
-      setBooks((prev) => [
-        ...prev,
-        {
-          id: result.id,
-          title: result.title,
-          author: result.author_name || "Unknown",
-          stock: result.stock,
-        },
-      ]);
+      // Refresh data
+      fetchBooks();
 
       // reset form
       setFormData({
@@ -201,7 +223,19 @@ export default function LibrarianDashboard() {
           </div>
 
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setIsEditing(false);
+              setFormData({
+                isbn: "",
+                title: "",
+                stock: 0,
+                file_pdf: "",
+                category_id: "",
+                publisher_id: "",
+                author_name: "",
+              });
+              setIsModalOpen(true);
+            }}
             className="flex items-center justify-center gap-2 bg-stone-900 hover:bg-orange-800 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95"
           >
             <Plus className="w-5 h-5" />
@@ -236,7 +270,7 @@ export default function LibrarianDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-50">
-                {books.map((book) => (
+                {books.map((book: any) => (
                   <tr
                     key={book.id}
                     className="hover:bg-stone-50/50 transition-colors"
@@ -254,7 +288,10 @@ export default function LibrarianDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        <button className="p-2 text-stone-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                        <button 
+                          onClick={() => handleEdit(book)}
+                          className="p-2 text-stone-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
@@ -273,19 +310,23 @@ export default function LibrarianDashboard() {
         </div>
       </main>
 
-      {/* Modal Tambah Buku */}
+      {/* Modal Tambah/Edit Buku */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-xl p-8 relative">
             <button
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                setIsEditing(false);
+                setEditBookId(null);
+              }}
               className="absolute top-5 right-5 text-stone-400 hover:text-red-500"
             >
               <X />
             </button>
 
             <h2 className="text-2xl font-serif font-bold mb-6">
-              Tambah Buku Baru
+              {isEditing ? "Edit Buku" : "Tambah Buku Baru"}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -323,7 +364,7 @@ export default function LibrarianDashboard() {
                 onClick={handleSubmit}
                 className="bg-stone-900 hover:bg-orange-800 text-white px-6 py-3 rounded-xl font-bold transition-all"
               >
-                Simpan Buku
+                {isEditing ? "Perbarui Buku" : "Simpan Buku"}
               </button>
             </div>
           </div>

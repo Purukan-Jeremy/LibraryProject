@@ -75,6 +75,13 @@ def read_books(db: Session = Depends(database.get_db)):
     return crud.get_books(db)
 
 # ==============================
+# --- ENDPOINT UPDATE BUKU ---
+# ==============================
+@app.put("/api/books/{book_id}", response_model=schemas.Book)
+def update_book(book_id: int, book: schemas.BookCreate, db: Session = Depends(database.get_db)):
+    return crud.update_book(db=db, book_id=book_id, book=book)
+
+# ==============================
 # --- ENDPOINT HAPUS BUKU ---
 # ==============================
 @app.delete("/api/books/{book_id}")
