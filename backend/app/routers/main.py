@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from . import models, schemas, database
+from . import models, schemas, database, crud
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -58,3 +58,25 @@ def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
             "role": role_name
         }
     }
+
+# ==============================
+# --- ENDPOINT TAMBAH BUKU ---
+# ==============================
+@app.post("/api/books", response_model=schemas.Book)
+def create_book(book: schemas.BookCreate, db: Session = Depends(database.get_db)):
+    return crud.create_book(db=db, book=book)
+
+
+# ==============================
+# --- ENDPOINT AMBIL SEMUA BUKU ---
+# ==============================
+@app.get("/api/books", response_model=list[schemas.Book])
+def read_books(db: Session = Depends(database.get_db)):
+    return crud.get_books(db)
+
+# ==============================
+# --- ENDPOINT HAPUS BUKU ---
+# ==============================
+@app.delete("/api/books/{book_id}")
+def delete_book(book_id: int, db: Session = Depends(database.get_db)):
+    return crud.delete_book(db=db, book_id=book_id)
