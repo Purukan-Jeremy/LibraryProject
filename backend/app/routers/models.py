@@ -38,10 +38,11 @@ class Book(Base):
 
     category_id = Column(Integer, ForeignKey("tbl_categories.id"))
     publisher_id = Column(Integer, ForeignKey("tbl_publishers.id"))
-    author_name = Column(String(255), nullable=False)  # langsung pakai nama
+    author_name = Column(String(150), ForeignKey("tbl_authors.author_name")) # FK ke tbl_authors.author_name
 
     category = relationship("Category", back_populates="books")
     publisher = relationship("Publisher", back_populates="books")
+    author = relationship("Author", back_populates="books")
 
 class Category(Base):
     __tablename__ = "tbl_categories"
@@ -55,6 +56,6 @@ class Author(Base):
     __tablename__ = "tbl_authors"
 
     id = Column(Integer, primary_key=True, index=True)
-    author_name = Column(String(150), nullable=False)
+    author_name = Column(String(150), unique=True, nullable=False) # Harus unique untuk jadi FK
 
     books = relationship("Book", back_populates="author")
