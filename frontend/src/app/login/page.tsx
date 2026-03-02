@@ -26,7 +26,7 @@ export default function LoginPage() {
       alert(`Welcome back, ${response.data.user.fullname}!`);
       
       // Redirect ke halaman librarypage sesuai permintaanmu
-      router.push('/librarypage'); 
+      router.replace('/librarypage'); 
     } catch (error: any) {
       const msg = error.response?.data?.detail || "Login failed, please check your email and password";
       alert(msg);
