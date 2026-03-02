@@ -13,6 +13,7 @@ import {
   LogOut,
   LibraryBig,
   X,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -26,7 +27,8 @@ export default function LibrarianDashboard() {
     isbn: "",
     title: "",
     stock: 0,
-    file_pdf: "",
+    file_pdf: null as File | null, // ← diubah: File object, bukan string
+    currentPdfName: "", // ← ditambah: simpan nama PDF lama saat edit
     category_id: "",
     publisher_id: "",
     author_name: "",
@@ -68,6 +70,36 @@ export default function LibrarianDashboard() {
     });
   };
 
+  // ================= HANDLE FILE INPUT (khusus PDF) =================
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validasi content-type
+    if (file.type !== "application/pdf") {
+      alert("❌ Hanya file PDF yang diperbolehkan!");
+      e.target.value = "";
+      return;
+    }
+
+    // Validasi ekstensi
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      alert("❌ Ekstensi file harus .pdf!");
+      e.target.value = "";
+      return;
+    }
+
+    // Validasi ukuran maksimal 10MB
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert("❌ Ukuran file maksimal 10MB!");
+      e.target.value = "";
+      return;
+    }
+
+    setFormData({ ...formData, file_pdf: file });
+  };
+
   // ================= HANDLE EDIT BUTTON =================
   const handleEdit = (book: any) => {
     setIsEditing(true);
@@ -76,7 +108,8 @@ export default function LibrarianDashboard() {
       isbn: book.isbn || "",
       title: book.title || "",
       stock: book.stock || 0,
-      file_pdf: book.file_pdf || "",
+      file_pdf: null, // ← reset, user pilih file baru kalau mau ganti
+      currentPdfName: book.file_pdf || "", // ← simpan nama file lama untuk ditampilkan
       category_id: book.category_id || "",
       publisher_id: book.publisher_id || "",
       author_name: book.author || "",
@@ -87,24 +120,28 @@ export default function LibrarianDashboard() {
   // ================= TAMBAH / UPDATE BUKU =================
   const handleSubmit = async () => {
     try {
-      const url = isEditing 
+      const url = isEditing
         ? `http://127.0.0.1:8000/api/books/${editBookId}`
         : "http://127.0.0.1:8000/api/books";
-      
+
       const method = isEditing ? "PUT" : "POST";
+
+      // ← diubah: pakai FormData bukan JSON karena ada file upload
+      const fd = new FormData();
+      fd.append("isbn", formData.isbn);
+      fd.append("title", formData.title);
+      fd.append("stock", String(formData.stock));
+      fd.append("category_id", formData.category_id);
+      fd.append("publisher_id", formData.publisher_id);
+      fd.append("author_name", formData.author_name);
+      if (formData.file_pdf) {
+        fd.append("file_pdf", formData.file_pdf);
+      }
 
       const response = await fetch(url, {
         method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          isbn: formData.isbn,
-          title: formData.title,
-          stock: Number(formData.stock),
-          file_pdf: formData.file_pdf,
-          category_id: Number(formData.category_id),
-          publisher_id: Number(formData.publisher_id),
-          author_name: formData.author_name,
-        }),
+        // ⚠️ JANGAN set Content-Type — browser otomatis set multipart/form-data
+        body: fd,
       });
 
       const result = await response.json();
@@ -114,7 +151,9 @@ export default function LibrarianDashboard() {
         return;
       }
 
-      alert(isEditing ? "Buku berhasil diperbarui!" : "Buku berhasil disimpan!");
+      alert(
+        isEditing ? "Buku berhasil diperbarui!" : "Buku berhasil disimpan!",
+      );
       setIsModalOpen(false);
       setIsEditing(false);
       setEditBookId(null);
@@ -127,7 +166,8 @@ export default function LibrarianDashboard() {
         isbn: "",
         title: "",
         stock: 0,
-        file_pdf: "",
+        file_pdf: null,
+        currentPdfName: "",
         category_id: "",
         publisher_id: "",
         author_name: "",
@@ -229,7 +269,8 @@ export default function LibrarianDashboard() {
                 isbn: "",
                 title: "",
                 stock: 0,
-                file_pdf: "",
+                file_pdf: null,
+                currentPdfName: "",
                 category_id: "",
                 publisher_id: "",
                 author_name: "",
@@ -288,7 +329,7 @@ export default function LibrarianDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleEdit(book)}
                           className="p-2 text-stone-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                         >
@@ -330,17 +371,21 @@ export default function LibrarianDashboard() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Input teks biasa — sama persis seperti semula, minus file_pdf */}
               {[
                 { name: "isbn", placeholder: "ISBN" },
                 { name: "title", placeholder: "Judul Buku" },
                 { name: "stock", placeholder: "Stok", type: "number" },
-                { name: "file_pdf", placeholder: "File PDF URL" },
                 {
                   name: "category_id",
                   placeholder: "Category ID",
                   type: "number",
                 },
-                { name: "author_name", placeholder: "Author Name", type: "text" },
+                {
+                  name: "author_name",
+                  placeholder: "Author Name",
+                  type: "text",
+                },
                 {
                   name: "publisher_id",
                   placeholder: "Publisher ID",
@@ -351,12 +396,67 @@ export default function LibrarianDashboard() {
                   key={field.name}
                   name={field.name}
                   type={field.type || "text"}
-                  value={formData[field.name as keyof typeof formData]}
+                  value={
+                    formData[field.name as keyof typeof formData] as string
+                  }
                   placeholder={field.placeholder}
                   onChange={handleChange}
                   className="px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-800/10"
                 />
               ))}
+
+              {/* ← diubah: input file PDF menggantikan input text file_pdf */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-stone-600 mb-2">
+                  File PDF{" "}
+                  <span className="font-normal text-stone-400">
+                    (maks. 10MB, hanya .pdf)
+                  </span>
+                </label>
+
+                {/* Tampilkan link file lama saat mode edit */}
+                {isEditing && formData.currentPdfName && (
+                  <div className="flex items-center gap-2 mb-2 p-2 bg-orange-50 rounded-lg">
+                    <FileText className="w-4 h-4 text-orange-700 flex-shrink-0" />
+                    <span className="text-xs text-stone-500">
+                      File saat ini:
+                    </span>
+                    <a
+                      href={`http://127.0.0.1:8000/uploads/pdf/${formData.currentPdfName}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-orange-700 underline truncate"
+                    >
+                      {formData.currentPdfName}
+                    </a>
+                    <span className="text-xs text-stone-400 ml-auto whitespace-nowrap">
+                      (kosongkan jika tidak ingin mengganti)
+                    </span>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-800/10 text-sm
+                    file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0
+                    file:bg-orange-800 file:text-white file:text-sm file:font-semibold file:cursor-pointer cursor-pointer"
+                />
+
+                {/* Preview nama & ukuran file yang dipilih */}
+                {formData.file_pdf && (
+                  <div className="flex items-center gap-2 mt-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                    <FileText className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-semibold">
+                      {formData.file_pdf.name}
+                    </span>
+                    <span className="text-green-500">
+                      ({(formData.file_pdf.size / 1024).toFixed(1)} KB)
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end">

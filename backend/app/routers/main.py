@@ -1,7 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Form, File, UploadFile
 from sqlalchemy.orm import Session
 from . import models, schemas, database, crud
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from typing import Optional
+import os
 
 app = FastAPI()
 
@@ -12,6 +15,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ===== STATIC FILES — agar PDF bisa diakses via URL =====
+os.makedirs("uploads/pdf", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # --- ENDPOINT REGISTER ---
 @app.post("/api/register")
@@ -37,7 +44,6 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
     return {"message": "Registrasi berhasil"}
 
 # --- ENDPOINT LOGIN ---
-
 @app.post("/api/login")
 def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
     # 1. Cari user berdasarkan email
@@ -62,24 +68,59 @@ def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
 # ==============================
 # --- ENDPOINT TAMBAH BUKU ---
 # ==============================
-@app.post("/api/books", response_model=schemas.Book)
-def create_book(book: schemas.BookCreate, db: Session = Depends(database.get_db)):
-    return crud.create_book(db=db, book=book)
+@app.post("/api/books")
+def create_book(
+    isbn: str = Form(...),
+    title: str = Form(...),
+    stock: int = Form(...),
+    category_id: int = Form(...),
+    publisher_id: int = Form(...),
+    author_name: str = Form(...),
+    file_pdf: Optional[UploadFile] = File(None),
+    db: Session = Depends(database.get_db)
+):
+    book_data = {
+        "isbn": isbn,
+        "title": title,
+        "stock": stock,
+        "category_id": category_id,
+        "publisher_id": publisher_id,
+        "author_name": author_name,
+    }
+    return crud.create_book(db=db, book_data=book_data, pdf_file=file_pdf)
 
 
 # ==============================
 # --- ENDPOINT AMBIL SEMUA BUKU ---
 # ==============================
-@app.get("/api/books", response_model=list[schemas.Book])
+@app.get("/api/books")
 def read_books(db: Session = Depends(database.get_db)):
     return crud.get_books(db)
 
 # ==============================
 # --- ENDPOINT UPDATE BUKU ---
 # ==============================
-@app.put("/api/books/{book_id}", response_model=schemas.Book)
-def update_book(book_id: int, book: schemas.BookCreate, db: Session = Depends(database.get_db)):
-    return crud.update_book(db=db, book_id=book_id, book=book)
+@app.put("/api/books/{book_id}")
+def update_book(
+    book_id: int,
+    isbn: str = Form(...),
+    title: str = Form(...),
+    stock: int = Form(...),
+    category_id: int = Form(...),
+    publisher_id: int = Form(...),
+    author_name: str = Form(...),
+    file_pdf: Optional[UploadFile] = File(None),
+    db: Session = Depends(database.get_db)
+):
+    book_data = {
+        "isbn": isbn,
+        "title": title,
+        "stock": stock,
+        "category_id": category_id,
+        "publisher_id": publisher_id,
+        "author_name": author_name,
+    }
+    return crud.update_book(db=db, book_id=book_id, book_data=book_data, pdf_file=file_pdf)
 
 # ==============================
 # --- ENDPOINT HAPUS BUKU ---
