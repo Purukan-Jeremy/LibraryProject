@@ -26,8 +26,8 @@ class BookBase(BaseModel):
     title: str
     stock: Optional[int] = 0
     file_pdf: Optional[str] = None
-    category_id: Optional[int] = None
-    publisher_id: Optional[int] = None
+    category_name: Optional[str] = None
+    publisher_name: Optional[str] = None
     author_name: Optional[str] = None
 
 
