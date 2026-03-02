@@ -31,6 +31,7 @@ export default function LibrarianDashboard() {
   const [formData, setFormData] = useState({
     isbn: "",
     title: "",
+    description: "",
     stock: 0,
     file_pdf: null as File | null,
     currentPdfName: "",
@@ -109,6 +110,7 @@ export default function LibrarianDashboard() {
         id: b.id,
         isbn: b.isbn,
         title: b.title,
+        description: b.description || "",
         author: b.author_name || "Unknown",
         stock: b.stock,
         file_pdf: b.file_pdf,
@@ -220,6 +222,7 @@ export default function LibrarianDashboard() {
     setFormData({
       isbn: book.isbn || "",
       title: book.title || "",
+      description: book.description || "",
       stock: book.stock || 0,
       file_pdf: null,
       currentPdfName: book.file_pdf || "",
@@ -243,6 +246,7 @@ export default function LibrarianDashboard() {
       const fd = new FormData();
       fd.append("isbn", formData.isbn);
       fd.append("title", formData.title);
+      fd.append("description", formData.description);
       fd.append("stock", String(formData.stock));
       fd.append("category_name", formData.category_name);
       fd.append("publisher_name", formData.publisher_name);
@@ -279,6 +283,7 @@ export default function LibrarianDashboard() {
       setFormData({
         isbn: "",
         title: "",
+        description: "",
         stock: 0,
         file_pdf: null,
         currentPdfName: "",
@@ -407,6 +412,7 @@ export default function LibrarianDashboard() {
               setFormData({
                 isbn: "",
                 title: "",
+                description: "",
                 stock: 0,
                 file_pdf: null,
                 currentPdfName: "",
@@ -517,6 +523,17 @@ export default function LibrarianDashboard() {
                 setIsModalOpen(false);
                 setIsEditing(false);
                 setEditBookId(null);
+                setFormData({
+                  isbn: "",
+                  title: "",
+                  description: "",
+                  stock: 0,
+                  file_pdf: null,
+                  currentPdfName: "",
+                  category_name: "",
+                  publisher_name: "",
+                  author_name: "",
+                });
               }}
               className="absolute top-5 right-5 text-stone-400 hover:text-red-500"
             >
@@ -556,6 +573,16 @@ export default function LibrarianDashboard() {
                   className="px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-800/10"
                 />
               ))}
+
+              <div className="md:col-span-2">
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  placeholder="Book Description"
+                  onChange={(e: any) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-800/10 h-32 resize-none"
+                />
+              </div>
 
               {/* ===== DROPDOWN + SEARCH CATEGORY ===== */}
               <div className="relative" ref={categoryRef}>

@@ -43,7 +43,8 @@ export default function LibraryPage() {
     password: "",
   });
 
-  // --- STATE MODAL BUKU ---
+  // --- STATE BUKU ---
+  const [allBooks, setAllBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null); // Menyimpan buku yang diklik
   const [showSuccessModal, setShowSuccessModal] = useState(false); // Modal Sukses Pinjam
 
@@ -80,70 +81,33 @@ export default function LibraryPage() {
     setNotifications(notifications.map((n) => ({ ...n, unread: false })));
   };
 
-  // Book Filter handling
-  // Dummy book data, to be replaced with API data
-  const allBooks = [
-    {
-      id: 1,
-      title: "Atomic Habits",
-      author: "James Clear",
-      category: "Education",
-      year: 2018,
-      publisher: "Penguin Random House",
-      isbn: "978-0735211292",
-      stock: 5,
-      synopsis:
-        "Perubahan kecil yang memberikan hasil luar biasa. Buku ini mengajarkan kerangka kerja terbukti untuk menjadi 1% lebih baik setiap hari.",
-    },
-    {
-      id: 2,
-      title: "Dune",
-      author: "Frank Herbert",
-      category: "Fiction",
-      year: 1965,
-      publisher: "Chilton Books",
-      isbn: "978-0441172719",
-      stock: 2,
-      synopsis:
-        "Kisah epik fiksi ilmiah yang berlatar di planet gurun Arrakis, di mana intrik politik dan ekologi berpadu dalam perebutan kekuasaan.",
-    },
-    {
-      id: 3,
-      title: "Sapiens",
-      author: "Yuval Harari",
-      category: "Science",
-      year: 2011,
-      publisher: "Harvill Secker",
-      isbn: "978-0062316097",
-      stock: 0, // Stok habis contohnya
-      synopsis:
-        "Riwayat singkat umat manusia, menjelajahi bagaimana biologi dan sejarah telah membentuk kita dan meningkatkan pemahaman kita tentang apa artinya menjadi manusia.",
-    },
-    {
-      id: 4,
-      title: "Earth",
-      author: "Tere Liye",
-      category: "Fiction",
-      year: 2014,
-      publisher: "Gramedia Pustaka Utama",
-      isbn: "978-6020301129",
-      stock: 8,
-      synopsis:
-        "Petualangan Raib, Seli, dan Ali di dunia paralel. Sebuah kisah tentang persahabatan, pengorbanan, dan dunia yang penuh misteri.",
-    },
-    {
-      id: 5,
-      title: "Philosophy of Teras",
-      author: "Henry Manampiring",
-      category: "Education",
-      year: 2018,
-      publisher: "Kompas",
-      isbn: "978-6024125189",
-      stock: 12,
-      synopsis:
-        "Penjelasan filsafat Stoisisme yang relevan dengan kehidupan sehari-hari masa kini, membantu pembaca lebih tenang dan tangguh.",
-    },
-  ];
+  // Fetch books from backend
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/books");
+      const data = await response.json();
+      
+      const formattedBooks = data.map((b: any) => ({
+        id: b.id,
+        title: b.title,
+        author: b.author_name || "Unknown",
+        category: b.category_name || "Uncategorized",
+        year: b.year || "N/A", // Assuming year might be added or handled
+        publisher: b.publisher_name || "Unknown",
+        isbn: b.isbn,
+        stock: b.stock,
+        synopsis: b.description || "No description available.",
+      }));
+      
+      setAllBooks(formattedBooks);
+    } catch (error) {
+      console.error("Gagal mengambil buku:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
 
   // Filter options for category and year
   const categories = ["All Categories", "Fiction", "Science", "Education"];
@@ -464,15 +428,19 @@ export default function LibraryPage() {
                     Sampul {book.title}
                   </div>
                 </div>
+                <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors leading-tight">
+                  {book.title}
+                </h3>
+                <p className="text-xs text-stone-500 font-medium">
+                  {book.author} • {book.year}
+                </p>
               </div>
-              <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors leading-tight">
-                {book.title}
-              </h3>
-              <p className="text-xs text-stone-500 font-medium">
-                {book.author} • {book.year}
-              </p>
+            ))
+          ) : (
+            <div className="col-span-full py-20 text-center text-stone-400 italic">
+              Books not found with those criteria.
             </div>
-          ))}
+          )}
         </div>
       </main>
 

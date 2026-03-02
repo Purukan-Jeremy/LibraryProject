@@ -33,6 +33,7 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     isbn = Column(String(20), unique=True, nullable=False)
     title = Column(String(255), nullable=False)
+    description = Column(String(1000), nullable=True) # Added description
     stock = Column(Integer, default=0)
     file_pdf = Column(String(255))
 

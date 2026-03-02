@@ -81,6 +81,7 @@ def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None):
     db_book = models.Book(
         isbn=book_data["isbn"],
         title=book_data["title"],
+        description=book_data.get("description"),
         stock=book_data["stock"],
         file_pdf=pdf_filename,
         category_name=db_category.category_name if category_name else None,
@@ -102,6 +103,7 @@ def get_books(db: Session):
             "id": b.id,
             "isbn": b.isbn,
             "title": b.title,
+            "description": b.description,
             "stock": b.stock,
             "file_pdf": b.file_pdf,
             "category_name": b.category_name,
@@ -174,6 +176,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
     # 6. Update field lainnya
     db_book.isbn = book_data["isbn"]
     db_book.title = book_data["title"]
+    db_book.description = book_data.get("description")
     db_book.stock = book_data["stock"]
 
     db.commit()
