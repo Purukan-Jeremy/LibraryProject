@@ -81,14 +81,16 @@ export default function FavoritesPage() {
             </p>
           </div>
 
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300 group-focus-within:text-orange-800 transition-colors" />
-            <input
-              type="text"
-              placeholder="Cari di favorit..."
-              className="pl-12 pr-6 py-4 bg-white border border-stone-200 rounded-[1.5rem] text-sm focus:ring-4 focus:ring-orange-800/5 outline-none w-full md:w-80 shadow-sm transition-all"
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex gap-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Cari di favorit..."
+                className="pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-2xl text-sm focus:ring-2 focus:ring-orange-800/10 outline-none w-64"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
         </header>
 
