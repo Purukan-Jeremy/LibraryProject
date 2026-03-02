@@ -15,7 +15,7 @@ import Link from "next/link";
 export default function FavoritesPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Data Dummy untuk koleksi favorit
+  // Dummy data for favorite collection
   const [favorites, setFavorites] = useState([
     {
       id: 1,
@@ -54,7 +54,7 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-[#fafaf9] p-8 md:p-12">
       <div className="max-w-6xl mx-auto">
-        {/* Navigasi Balik */}
+        {/* Back Navigation */}
         <Link
           href="/librarypage"
           className="inline-flex items-center gap-2 text-stone-400 hover:text-orange-800 transition-all mb-10 group"
@@ -92,7 +92,7 @@ export default function FavoritesPage() {
           </div>
         </header>
 
-        {/* Grid Buku Favorit */}
+        {/* Favorite Books Grid */}
         {filteredFavs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredFavs.map((book) => (
@@ -101,7 +101,7 @@ export default function FavoritesPage() {
                 className="group relative bg-white border border-stone-100 rounded-[2.5rem] p-6 hover:shadow-2xl hover:shadow-orange-900/5 transition-all duration-500"
               >
                 <div className="flex gap-6">
-                  {/* Poster Buku (Placeholder) */}
+                  {/* Book Poster (Placeholder) */}
                   <div className="w-32 h-44 bg-stone-100 rounded-[1.5rem] flex-shrink-0 flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500 shadow-inner">
                     <BookOpen className="w-8 h-8 text-stone-200" />
                     <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur rounded-lg flex items-center gap-1 shadow-sm">

@@ -18,7 +18,7 @@ export default function LoanHistoryPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Data Dummy untuk simulasi tampilan
+  // Dummy data for display simulation
   const loanData = [
     {
       id: 1,
@@ -46,7 +46,7 @@ export default function LoanHistoryPage() {
     },
   ];
 
-  // Logika Filtering
+  // Filtering Logic
   const filteredLoans = loanData.filter((loan) => {
     const matchStatus = filterStatus === "ALL" || loan.status === filterStatus;
     const matchSearch = loan.title
@@ -58,7 +58,7 @@ export default function LoanHistoryPage() {
   return (
     <div className="min-h-screen bg-[#fafaf9] p-8 md:p-12">
       <div className="max-w-5xl mx-auto">
-        {/* Tombol Kembali */}
+        {/* Back Button */}
         <Link
           href="/librarypage"
           className="inline-flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-colors mb-8 group"
@@ -77,7 +77,7 @@ export default function LoanHistoryPage() {
             </p>
           </div>
 
-          {/* Pencarian & Filter Cepat */}
+          {/* Search & Quick Filter */}
           <div className="flex gap-3">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
@@ -91,7 +91,7 @@ export default function LoanHistoryPage() {
           </div>
         </header>
 
-        {/* Tab Filter Status */}
+        {/* Status Filter Tabs */}
         <div className="flex gap-2 mb-8 bg-stone-100/50 p-1.5 rounded-2xl w-fit">
           <button
             onClick={() => setFilterStatus("ALL")}
@@ -113,7 +113,7 @@ export default function LoanHistoryPage() {
           </button>
         </div>
 
-        {/* Daftar Riwayat */}
+        {/* History List */}
         <div className="grid gap-4">
           {filteredLoans.length > 0 ? (
             filteredLoans.map((loan) => (
