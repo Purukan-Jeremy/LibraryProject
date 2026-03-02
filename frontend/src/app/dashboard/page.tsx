@@ -29,8 +29,8 @@ export default function LibrarianDashboard() {
     stock: 0,
     file_pdf: null as File | null, // ← diubah: File object, bukan string
     currentPdfName: "", // ← ditambah: simpan nama PDF lama saat edit
-    category_id: "",
-    publisher_id: "",
+    category_name: "",
+    publisher_name: "",
     author_name: "",
   });
 
@@ -47,8 +47,8 @@ export default function LibrarianDashboard() {
         author: b.author_name || "Unknown",
         stock: b.stock,
         file_pdf: b.file_pdf,
-        category_id: b.category_id,
-        publisher_id: b.publisher_id,
+        category: b.category_name || "Unknown",
+        publisher: b.publisher_name || "Unknown",
       }));
 
       setBooks(formattedBooks);
@@ -110,8 +110,8 @@ export default function LibrarianDashboard() {
       stock: book.stock || 0,
       file_pdf: null, // ← reset, user pilih file baru kalau mau ganti
       currentPdfName: book.file_pdf || "", // ← simpan nama file lama untuk ditampilkan
-      category_id: book.category_id || "",
-      publisher_id: book.publisher_id || "",
+      category_name: book.category || "",
+      publisher_name: book.publisher || "",
       author_name: book.author || "",
     });
     setIsModalOpen(true);
@@ -131,8 +131,8 @@ export default function LibrarianDashboard() {
       fd.append("isbn", formData.isbn);
       fd.append("title", formData.title);
       fd.append("stock", String(formData.stock));
-      fd.append("category_id", formData.category_id);
-      fd.append("publisher_id", formData.publisher_id);
+      fd.append("category_name", formData.category_name);
+      fd.append("publisher_name", formData.publisher_name);
       fd.append("author_name", formData.author_name);
       if (formData.file_pdf) {
         fd.append("file_pdf", formData.file_pdf);
@@ -168,8 +168,8 @@ export default function LibrarianDashboard() {
         stock: 0,
         file_pdf: null,
         currentPdfName: "",
-        category_id: "",
-        publisher_id: "",
+        category_name: "",
+        publisher_name: "",
         author_name: "",
       });
     } catch (error) {
@@ -271,8 +271,8 @@ export default function LibrarianDashboard() {
                 stock: 0,
                 file_pdf: null,
                 currentPdfName: "",
-                category_id: "",
-                publisher_id: "",
+                category_name: "",
+                publisher_name: "",
                 author_name: "",
               });
               setIsModalOpen(true);
@@ -377,9 +377,9 @@ export default function LibrarianDashboard() {
                 { name: "title", placeholder: "Judul Buku" },
                 { name: "stock", placeholder: "Stok", type: "number" },
                 {
-                  name: "category_id",
-                  placeholder: "Category ID",
-                  type: "number",
+                  name: "category_name",
+                  placeholder: "Category Name",
+                  type: "text",
                 },
                 {
                   name: "author_name",
@@ -387,9 +387,9 @@ export default function LibrarianDashboard() {
                   type: "text",
                 },
                 {
-                  name: "publisher_id",
-                  placeholder: "Publisher ID",
-                  type: "number",
+                  name: "publisher_name",
+                  placeholder: "Publisher Name",
+                  type: "text",
                 },
               ].map((field) => (
                 <input

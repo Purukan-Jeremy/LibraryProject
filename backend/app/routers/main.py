@@ -73,8 +73,8 @@ def create_book(
     isbn: str = Form(...),
     title: str = Form(...),
     stock: int = Form(...),
-    category_id: int = Form(...),
-    publisher_id: int = Form(...),
+    category_name: str = Form(...),
+    publisher_name: str = Form(...),
     author_name: str = Form(...),
     file_pdf: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db)
@@ -83,8 +83,8 @@ def create_book(
         "isbn": isbn,
         "title": title,
         "stock": stock,
-        "category_id": category_id,
-        "publisher_id": publisher_id,
+        "category_name": category_name,
+        "publisher_name": publisher_name,
         "author_name": author_name,
     }
     return crud.create_book(db=db, book_data=book_data, pdf_file=file_pdf)
@@ -106,8 +106,8 @@ def update_book(
     isbn: str = Form(...),
     title: str = Form(...),
     stock: int = Form(...),
-    category_id: int = Form(...),
-    publisher_id: int = Form(...),
+    category_name: str = Form(...),
+    publisher_name: str = Form(...),
     author_name: str = Form(...),
     file_pdf: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db)
@@ -116,8 +116,8 @@ def update_book(
         "isbn": isbn,
         "title": title,
         "stock": stock,
-        "category_id": category_id,
-        "publisher_id": publisher_id,
+        "category_name": category_name,
+        "publisher_name": publisher_name,
         "author_name": author_name,
     }
     return crud.update_book(db=db, book_id=book_id, book_data=book_data, pdf_file=file_pdf)

@@ -23,7 +23,7 @@ class Publisher(Base):
     __tablename__ = "tbl_publishers"   # SESUAIKAN DENGAN DATABASE
 
     id = Column(Integer, primary_key=True, index=True)
-    publisher_name = Column(String(150), nullable=False)
+    publisher_name = Column(String(150), unique=True, nullable=False)
 
     books = relationship("Book", back_populates="publisher")
 
@@ -36,8 +36,8 @@ class Book(Base):
     stock = Column(Integer, default=0)
     file_pdf = Column(String(255))
 
-    category_id = Column(Integer, ForeignKey("tbl_categories.id"))
-    publisher_id = Column(Integer, ForeignKey("tbl_publishers.id"))
+    category_name = Column(String(100), ForeignKey("tbl_categories.category_name"))
+    publisher_name = Column(String(150), ForeignKey("tbl_publishers.publisher_name"))
     author_name = Column(String(150), ForeignKey("tbl_authors.author_name")) # FK ke tbl_authors.author_name
 
     category = relationship("Category", back_populates="books")
@@ -48,7 +48,7 @@ class Category(Base):
     __tablename__ = "tbl_categories"
 
     id = Column(Integer, primary_key=True, index=True)
-    category_name = Column(String(150), nullable=False)
+    category_name = Column(String(150), unique=True, nullable=False)
 
     books = relationship("Book", back_populates="category")
 
