@@ -21,11 +21,16 @@ import {
   Shield,
   Star,
   Camera,
+  Building2,
+  Calendar,
+  Barcode,
+  BookOpen,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function LibraryPage() {
   const [user, setUser] = useState<any>(null);
-  //const [user, setUser] = useState<any>({ fullname: "Pengguna Uji Coba" });
+  //const [user, setUser] = useState<any>({ fullname: "Pengguna Uji Coba" }); //untuk testing tanpa backend
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -50,6 +55,10 @@ export default function LibraryPage() {
     setIsEditing(false);
     alert("Profil berhasil diperbarui!");
   };
+
+  // --- STATE MODAL BUKU ---
+  const [selectedBook, setSelectedBook] = useState<any>(null); // Menyimpan buku yang diklik
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // Modal Sukses Pinjam
 
   //Handle Notifikasi
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -92,6 +101,11 @@ export default function LibraryPage() {
       author: "James Clear",
       category: "Edukasi",
       year: 2018,
+      publisher: "Penguin Random House",
+      isbn: "978-0735211292",
+      stock: 5,
+      synopsis:
+        "Perubahan kecil yang memberikan hasil luar biasa. Buku ini mengajarkan kerangka kerja terbukti untuk menjadi 1% lebih baik setiap hari.",
     },
     {
       id: 2,
@@ -99,6 +113,11 @@ export default function LibraryPage() {
       author: "Frank Herbert",
       category: "Fiksi",
       year: 1965,
+      publisher: "Chilton Books",
+      isbn: "978-0441172719",
+      stock: 2,
+      synopsis:
+        "Kisah epik fiksi ilmiah yang berlatar di planet gurun Arrakis, di mana intrik politik dan ekologi berpadu dalam perebutan kekuasaan.",
     },
     {
       id: 3,
@@ -106,6 +125,11 @@ export default function LibraryPage() {
       author: "Yuval Harari",
       category: "Sains",
       year: 2011,
+      publisher: "Harvill Secker",
+      isbn: "978-0062316097",
+      stock: 0, // Stok habis contohnya
+      synopsis:
+        "Riwayat singkat umat manusia, menjelajahi bagaimana biologi dan sejarah telah membentuk kita dan meningkatkan pemahaman kita tentang apa artinya menjadi manusia.",
     },
     {
       id: 4,
@@ -113,6 +137,11 @@ export default function LibraryPage() {
       author: "Tere Liye",
       category: "Fiksi",
       year: 2014,
+      publisher: "Gramedia Pustaka Utama",
+      isbn: "978-6020301129",
+      stock: 8,
+      synopsis:
+        "Petualangan Raib, Seli, dan Ali di dunia paralel. Sebuah kisah tentang persahabatan, pengorbanan, dan dunia yang penuh misteri.",
     },
     {
       id: 5,
@@ -120,6 +149,11 @@ export default function LibraryPage() {
       author: "Henry Manampiring",
       category: "Edukasi",
       year: 2018,
+      publisher: "Kompas",
+      isbn: "978-6024125189",
+      stock: 12,
+      synopsis:
+        "Penjelasan filsafat Stoisisme yang relevan dengan kehidupan sehari-hari masa kini, membantu pembaca lebih tenang dan tangguh.",
     },
   ];
   // Opsi filter untuk kategori dan tahun (nanti disesuaikan)
@@ -153,6 +187,17 @@ export default function LibraryPage() {
     // Buku harus memenuhi ketiga syarat ini
     return matchCategory && matchYear && matchSearch;
   });
+
+  // --- FUNGSI PINJAM BUKU ---
+  const handleBorrowBook = () => {
+    // 1. Tutup modal detail buku
+    setSelectedBook(null);
+
+    // 2. Tampilkan modal sukses (sedikit delay agar transisi halus)
+    setTimeout(() => {
+      setShowSuccessModal(true);
+    }, 150);
+  };
 
   // Proteksi Halaman: Hanya user yang sudah login bisa masuk
   useEffect(() => {
@@ -406,7 +451,11 @@ export default function LibraryPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {filteredBooks.length > 0 ? (
             filteredBooks.map((book) => (
-              <div key={book.id} className="group cursor-pointer">
+              <div
+                key={book.id}
+                className="group cursor-pointer"
+                onClick={() => setSelectedBook(book)}
+              >
                 <div className="aspect-[3/4] bg-stone-200 rounded-[2rem] mb-4 overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300 relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                   <div className="flex items-center justify-center h-full text-stone-400 italic text-sm text-center px-4">
@@ -585,6 +634,160 @@ export default function LibraryPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {selectedBook && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setSelectedBook(null)}
+          />
+
+          {/* Modal Content */}
+          <div className="relative bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col md:flex-row max-h-[90vh]">
+            {/* Tombol Close */}
+            <button
+              onClick={() => setSelectedBook(null)}
+              className="absolute top-6 right-6 z-10 p-2 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-stone-600" />
+            </button>
+
+            {/* Kiri: Cover & Visual */}
+            <div className="w-full md:w-2/5 bg-stone-100 p-8 md:p-12 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-stone-200/50" />
+              <div className="relative w-48 aspect-[3/4] bg-white rounded-2xl shadow-xl flex items-center justify-center text-center p-4 z-0">
+                <div className="space-y-2">
+                  <Book className="w-12 h-12 text-orange-800 mx-auto opacity-50" />
+                  <p className="font-serif font-bold text-stone-800">
+                    {selectedBook.title}
+                  </p>
+                  <p className="text-xs text-stone-400">
+                    {selectedBook.author}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Kanan: Detail Informasi */}
+            <div className="w-full md:w-3/5 p-8 md:p-12 overflow-y-auto">
+              <div className="mb-6">
+                <div className="flex gap-2 mb-3">
+                  <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    {selectedBook.category}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedBook.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                  >
+                    {selectedBook.stock > 0 ? "Tersedia" : "Stok Habis"}
+                  </span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-2 leading-tight">
+                  {selectedBook.title}
+                </h2>
+                <p className="text-lg text-stone-500 font-medium">
+                  {selectedBook.author}
+                </p>
+              </div>
+
+              {/* Grid Info Detail */}
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                  <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
+                    <Building2 className="w-3 h-3" /> Penerbit
+                  </p>
+                  <p
+                    className="text-sm font-bold text-stone-800 truncate"
+                    title={selectedBook.publisher}
+                  >
+                    {selectedBook.publisher}
+                  </p>
+                </div>
+                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                  <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3" /> Tahun Terbit
+                  </p>
+                  <p className="text-sm font-bold text-stone-800">
+                    {selectedBook.year}
+                  </p>
+                </div>
+                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                  <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
+                    <Barcode className="w-3 h-3" /> ISBN
+                  </p>
+                  <p className="text-sm font-bold text-stone-800 font-mono tracking-tight">
+                    {selectedBook.isbn}
+                  </p>
+                </div>
+                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                  <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
+                    <BookOpen className="w-3 h-3" /> Stok Buku
+                  </p>
+                  <p className="text-sm font-bold text-stone-800">
+                    {selectedBook.stock} Eksemplar
+                  </p>
+                </div>
+              </div>
+
+              {/* Sinopsis */}
+              <div className="mb-8">
+                <h3 className="font-bold text-stone-900 mb-2">Sinopsis</h3>
+                <p className="text-stone-600 text-sm leading-relaxed">
+                  {selectedBook.synopsis}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 border-t border-stone-100 pt-8">
+                <button
+                  className="flex-1 bg-stone-900 hover:bg-orange-800 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleBorrowBook}
+                  disabled={selectedBook.stock === 0}
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  {selectedBook.stock > 0 ? "Pinjam Buku Ini" : "Stok Habis"}
+                </button>
+                <button
+                  className="px-6 py-4 bg-stone-100 text-stone-500 hover:bg-red-50 hover:text-red-500 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 group"
+                  onClick={() => alert("Ditambahkan ke favorit")}
+                >
+                  <Heart className="w-5 h-5 group-hover:fill-current" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL SUKSES PINJAM (BARU) --- */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          {/* Backdrop Transparan */}
+          <div
+            className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+            onClick={() => setShowSuccessModal(false)}
+          />
+
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center relative z-10 animate-in zoom-in duration-300 shadow-2xl">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">
+              Berhasil Dipinjam!
+            </h3>
+            <p className="text-stone-500 text-sm mb-8 leading-relaxed">
+              Buku telah berhasil ditambahkan ke daftar pinjaman Anda. Selamat
+              membaca!
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-orange-800 transition-all shadow-lg active:scale-95"
+            >
+              Oke, Mengerti
+            </button>
           </div>
         </div>
       )}

@@ -9,11 +9,20 @@ import {
   BookOpen,
   Star,
   ExternalLink,
+  X,
+  Building2,
+  Calendar,
+  Barcode,
+  Book,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function FavoritesPage() {
   const [searchTerm, setSearchTerm] = useState("");
+
+  // --- STATE MODAL BUKU ---
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // Modal Sukses Pinjam
 
   // Data Dummy untuk koleksi favorit
   const [favorites, setFavorites] = useState([
@@ -24,6 +33,11 @@ export default function FavoritesPage() {
       category: "Fiksi",
       rating: 4.9,
       stock: 12,
+      year: 2005,
+      publisher: "Bentang Pustaka",
+      isbn: "978-602-291-685-7",
+      synopsis:
+        "Kisah perjuangan sepuluh anak Laskar Pelangi di Belitung yang penuh semangat dalam menuntut ilmu di tengah keterbatasan fasilitas sekolah mereka.",
     },
     {
       id: 2,
@@ -32,6 +46,11 @@ export default function FavoritesPage() {
       category: "Filsafat",
       rating: 4.8,
       stock: 5,
+      year: 2018,
+      publisher: "Penerbit Buku Kompas",
+      isbn: "978-602-412-518-9",
+      synopsis:
+        "Sebuah panduan filosofi Stoisisme untuk mental yang tangguh dan hidup yang lebih tenang, relevan untuk menghadapi kekhawatiran masa kini.",
     },
     {
       id: 3,
@@ -39,7 +58,12 @@ export default function FavoritesPage() {
       author: "Carl Sagan",
       category: "Sains",
       rating: 4.9,
-      stock: 2,
+      stock: 0,
+      year: 1980,
+      publisher: "Random House",
+      isbn: "978-034-533-135-9",
+      synopsis:
+        "Perjalanan melintasi ruang dan waktu, mengeksplorasi asal-usul alam semesta, evolusi kehidupan, dan tempat manusia di dalam kosmos yang luas.",
     },
   ]);
 
@@ -50,6 +74,13 @@ export default function FavoritesPage() {
   const filteredFavs = favorites.filter((fav) =>
     fav.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  // --- FUNGSI PINJAM BUKU ---
+  const handleBorrowBook = () => {
+    setTimeout(() => {
+      setShowSuccessModal(true);
+    }, 150);
+  };
 
   return (
     <div className="min-h-screen bg-[#fafaf9] p-8 md:p-12">
@@ -106,12 +137,6 @@ export default function FavoritesPage() {
                   {/* Poster Buku (Placeholder) */}
                   <div className="w-32 h-44 bg-stone-100 rounded-[1.5rem] flex-shrink-0 flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500 shadow-inner">
                     <BookOpen className="w-8 h-8 text-stone-200" />
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur rounded-lg flex items-center gap-1 shadow-sm">
-                      <Star className="w-3 h-3 text-orange-500 fill-current" />
-                      <span className="text-[10px] font-bold">
-                        {book.rating}
-                      </span>
-                    </div>
                   </div>
 
                   <div className="flex flex-col justify-between flex-1 py-2">
@@ -139,7 +164,14 @@ export default function FavoritesPage() {
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 bg-stone-900 hover:bg-orange-800 text-white py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                        <button
+                          className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                            book.stock > 0
+                              ? "bg-stone-900 hover:bg-orange-800 text-white shadow-lg active:scale-95"
+                              : "bg-stone-200 text-stone-400 cursor-not-allowed"
+                          }`}
+                          onClick={handleBorrowBook}
+                        >
                           Pinjam <ExternalLink size={14} />
                         </button>
                         <button
@@ -173,6 +205,35 @@ export default function FavoritesPage() {
           </div>
         )}
       </div>
+      {/* --- MODAL SUKSES PINJAM (BARU) --- */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          {/* Backdrop Transparan */}
+          <div
+            className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+            onClick={() => setShowSuccessModal(false)}
+          />
+
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center relative z-10 animate-in zoom-in duration-300 shadow-2xl">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">
+              Berhasil Dipinjam!
+            </h3>
+            <p className="text-stone-500 text-sm mb-8 leading-relaxed">
+              Buku telah berhasil ditambahkan ke daftar pinjaman Anda. Selamat
+              membaca!
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-orange-800 transition-all shadow-lg active:scale-95"
+            >
+              Oke, Mengerti
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
