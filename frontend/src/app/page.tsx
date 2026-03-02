@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Book,
   Search,
@@ -17,6 +18,7 @@ export default function LandingPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Mengambil data user dari localStorage saat komponen dimuat
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function LandingPage() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    window.location.reload();
+    router.replace("/login");
   };
 
   return (
