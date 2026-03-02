@@ -24,8 +24,8 @@ import {
 } from "lucide-react";
 
 export default function LibraryPage() {
-  //const [user, setUser] = useState<any>(null);
-  const [user, setUser] = useState<any>({ fullname: "Pengguna Uji Coba" });
+  const [user, setUser] = useState<any>(null);
+  //const [user, setUser] = useState<any>({ fullname: "Pengguna Uji Coba" });
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -158,8 +158,8 @@ export default function LibraryPage() {
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (!savedUser) {
-      //router.push("/login");
-      setUser({ fullname: "Tamu (Preview Mode)" }); //Untuk viewing tanpa login, bisa diaktifkan ini
+      router.push("/login");
+      //setUser({ fullname: "Tamu (Preview Mode)" }); //Untuk viewing tanpa login, bisa diaktifkan ini
     } else {
       setUser(JSON.parse(savedUser));
     }
