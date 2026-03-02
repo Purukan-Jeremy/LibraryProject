@@ -24,9 +24,12 @@ import {
 } from "lucide-react";
 
 export default function LibraryPage() {
-  //const [user, setUser] = useState<any>(null);
-  const [user, setUser] = useState<any>({ fullname: "Pengguna Uji Coba" });
+  const [user, setUser] = useState<any>(null);
+  //const [user, setUser] = useState<any>({ fullname: "Pengguna Uji Coba" });
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  //Handle profil
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -34,7 +37,21 @@ export default function LibraryPage() {
     email: "",
     password: "",
   });
+  const handleSaveProfile = () => {
+    const updatedUser = {
+      ...user,
+      fullname: formData.fullname !== "" ? formData.fullname : user.fullname,
+      email: formData.email !== "" ? formData.email : user.email,
+      // Password biasanya dikirim ke API, di sini kita simulasi saja
+    };
 
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setIsEditing(false);
+    alert("Profil berhasil diperbarui!");
+  };
+
+  //Handle Notifikasi
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   // Contoh data notifikasi (Data Dummy)
   const [notifications, setNotifications] = useState([
@@ -60,20 +77,89 @@ export default function LibraryPage() {
       unread: false,
     },
   ]);
-
   // Logika cek apakah ada notifikasi yang belum dibaca
   const hasUnread = notifications.some((n) => n.unread);
-
   const markAllAsRead = () => {
     setNotifications(notifications.map((n) => ({ ...n, unread: false })));
   };
+
+  //Handle Filter Buku
+  //data dummy buku, nanti akan diganti dengan data dari API
+  const allBooks = [
+    {
+      id: 1,
+      title: "Atomic Habits",
+      author: "James Clear",
+      category: "Edukasi",
+      year: 2018,
+    },
+    {
+      id: 2,
+      title: "Dune",
+      author: "Frank Herbert",
+      category: "Fiksi",
+      year: 1965,
+    },
+    {
+      id: 3,
+      title: "Sapiens",
+      author: "Yuval Harari",
+      category: "Sains",
+      year: 2011,
+    },
+    {
+      id: 4,
+      title: "Bumi",
+      author: "Tere Liye",
+      category: "Fiksi",
+      year: 2014,
+    },
+    {
+      id: 5,
+      title: "Filosofi Teras",
+      author: "Henry Manampiring",
+      category: "Edukasi",
+      year: 2018,
+    },
+  ];
+  // Opsi filter untuk kategori dan tahun (nanti disesuaikan)
+  const categories = ["Semua Kategori", "Fiksi", "Sains", "Edukasi"];
+  const yearOptions = [
+    "Semua Tahun",
+    "2020 keatas",
+    "2010 - 2019",
+    "Dibawah 2010",
+  ];
+  // Di dalam komponen LibraryPage: (daftar buku dan state filter)
+  const [selectedCategory, setSelectedCategory] = useState("Semua Kategori");
+  const [selectedYear, setSelectedYear] = useState("Semua Tahun");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const filteredBooks = allBooks.filter((book) => {
+    const matchCategory =
+      selectedCategory === "Semua Kategori" ||
+      book.category === selectedCategory;
+
+    let matchYear = true;
+    if (selectedYear === "2020 keatas") matchYear = book.year >= 2020;
+    else if (selectedYear === "2010 - 2019")
+      matchYear = book.year >= 2010 && book.year <= 2019;
+    else if (selectedYear === "Dibawah 2010") matchYear = book.year < 2010;
+
+    const matchSearch =
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.author.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Buku harus memenuhi ketiga syarat ini
+    return matchCategory && matchYear && matchSearch;
+  });
 
   // Proteksi Halaman: Hanya user yang sudah login bisa masuk
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (!savedUser) {
       router.push("/login");
-      // setUser({ fullname: "Tamu (Preview Mode)" }); //Untuk viewing tanpa login, bisa diaktifkan ini
+      //setUser({ fullname: "Tamu (Preview Mode)" }); //Untuk viewing tanpa login, bisa diaktifkan ini
     } else {
       setUser(JSON.parse(savedUser));
     }
@@ -246,7 +332,7 @@ export default function LibraryPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="relative group">
+            <div className="relative w-full max-w-md hidden lg:block">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <input
                 type="text"
@@ -254,9 +340,77 @@ export default function LibraryPage() {
                 className="pl-12 pr-6 py-3 bg-white border border-stone-200 rounded-2xl text-sm w-full md:w-80 shadow-sm focus:ring-2 focus:ring-orange-800/10 outline-none transition-all"
               />
             </div>
-            <button className="p-3 bg-white border border-stone-200 rounded-2xl text-stone-600 hover:bg-stone-50 transition-colors shadow-sm">
-              <Filter className="w-5 h-5" />
-            </button>
+            <div className="flex gap-4 items-center relative">
+              {/* Tombol Pemicu Filter */}
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`p-3 border rounded-2xl flex items-center gap-2 transition-all ${
+                  isFilterOpen
+                    ? "bg-orange-800 text-white border-orange-800"
+                    : "bg-white text-stone-600 border-stone-200"
+                }`}
+              >
+                <Filter className="w-5 h-5" />
+                <span className="text-sm font-bold">Filter</span>
+              </button>
+
+              {/* Dropdown Menu */}
+              {isFilterOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setIsFilterOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-stone-100 rounded-[2rem] shadow-2xl z-20 p-6 animate-in fade-in zoom-in-95 duration-200">
+                    {/* Filter Kategori */}
+                    <div className="mb-4">
+                      <label className="text-[10px] font-black uppercase text-stone-400 ml-1 mb-2 block">
+                        Kategori
+                      </label>
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full p-3 bg-stone-50 border border-stone-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-800/10"
+                      >
+                        {categories.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Filter Tahun */}
+                    <div className="mb-4">
+                      <label className="text-[10px] font-black uppercase text-stone-400 ml-1 mb-2 block">
+                        Tahun Terbit
+                      </label>
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="w-full p-3 bg-stone-50 border border-stone-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-800/10"
+                      >
+                        {yearOptions.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setSelectedCategory("Semua Kategori");
+                        setSelectedYear("Semua Tahun");
+                      }}
+                      className="w-full py-2 text-[10px] font-bold text-orange-800 uppercase hover:bg-orange-50 rounded-lg transition-colors"
+                    >
+                      Reset Filter
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -270,13 +424,19 @@ export default function LibraryPage() {
                 <div className="flex items-center justify-center h-full text-stone-400 italic text-sm">
                   Book Cover
                 </div>
+                <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors leading-tight">
+                  {book.title}
+                </h3>
+                <p className="text-xs text-stone-500 font-medium">
+                  {book.author} • {book.year}
+                </p>
               </div>
               <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors">
                 Book Title {item}
               </h3>
               <p className="text-xs text-stone-500 font-medium">Book Author</p>
             </div>
-          ))}
+          )}
         </div>
       </main>
 

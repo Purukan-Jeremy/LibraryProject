@@ -26,3 +26,4 @@ Thumbs.db
 # --- Database ---
 *.sql
 *.sqlite
+package-lock.json
