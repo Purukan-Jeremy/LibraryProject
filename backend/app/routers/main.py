@@ -1,17 +1,27 @@
-from fastapi import FastAPI, Depends, HTTPException, Form, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, Form, File, UploadFile, Request
 from sqlalchemy.orm import Session
 from . import models, schemas, database, crud
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from typing import Optional
 import os
 
 app = FastAPI()
 
+# Session backend (tidak mengubah alur frontend yang sudah ada)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET_KEY", "dev-session-secret-change-this"),
+    same_site="lax",
+    https_only=False,
+)
+
 # Izinkan Frontend mengakses API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -45,7 +55,7 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
 
 # --- ENDPOINT LOGIN ---
 @app.post("/api/login")
-def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
+def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(database.get_db)):
     # 1. Cari user berdasarkan email
     user = db.query(models.User).filter(models.User.email == data.email).first()
     
@@ -55,6 +65,15 @@ def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
     
     # 3. Ambil nama role (Librarian/User) dari tabel relasi
     role_name = user.role.role_name if user.role else "User"
+
+    # Simpan session tanpa mengubah response lama.
+    request.session["user"] = {
+        "id": user.id,
+        "fullname": user.fullname,
+        "username": user.username,
+        "email": user.email,
+        "role": role_name,
+    }
 
     return {
         "message": "Login berhasil",
@@ -128,3 +147,7 @@ def update_book(
 @app.delete("/api/books/{book_id}")
 def delete_book(book_id: int, db: Session = Depends(database.get_db)):
     return crud.delete_book(db=db, book_id=book_id)
+
+@app.get("/api/categories")
+def get_categories(db: Session = Depends(database.get_db)):
+    return crud.get_categories(db)

@@ -146,6 +146,8 @@ export default function LibraryPage() {
     const savedUser = localStorage.getItem("user");
     if (!savedUser) {
       router.push("/login");
+      router.replace("/login");
+      //setUser({ fullname: "Tamu (Preview Mode)" }); //Untuk viewing tanpa login, bisa diaktifkan ini
     } else {
       setUser(JSON.parse(savedUser));
     }
@@ -153,7 +155,7 @@ export default function LibraryPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    router.push("/");
+    router.replace("/");
   };
 
   const handleSaveProfile = () => {
