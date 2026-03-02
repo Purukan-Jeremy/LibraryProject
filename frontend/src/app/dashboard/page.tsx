@@ -425,11 +425,6 @@ export default function LibrarianDashboard() {
                 { name: "title", placeholder: "Book Title" },
                 { name: "stock", placeholder: "Stock", type: "number" },
                 {
-                  name: "category_name",
-                  placeholder: "Category Name",
-                  type: "text",
-                },
-                {
                   name: "author_name",
                   placeholder: "Author Name",
                   type: "text",
