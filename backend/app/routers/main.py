@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Form, File, UploadFile, Request
 from sqlalchemy.orm import Session
-from . import models, schemas, database, crud
+from . import models, schemas, database, crud, auth_utils
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -41,12 +41,15 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
     if existing:
         raise HTTPException(status_code=400, detail="Username atau Email sudah terdaftar")
 
+    # Hash password sebelum simpan
+    hashed_password = auth_utils.get_password_hash(data.password)
+
     # Simpan ke tbl_users dengan role_id 2 (User)
     new_user = models.User(
         fullname=data.fullname,
         username=data.username,
         email=data.email,
-        password=data.password, # Note: Idealnya di-hash
+        password=hashed_password,
         role_id=2 
     )
     db.add(new_user)
@@ -59,8 +62,8 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
     # 1. Cari user berdasarkan email
     user = db.query(models.User).filter(models.User.email == data.email).first()
     
-    # 2. Cek apakah user ada dan password cocok
-    if not user or user.password != data.password:
+    # 2. Cek apakah user ada dan password cocok (menggunakan verifikasi hash)
+    if not user or not auth_utils.verify_password(data.password, user.password):
         raise HTTPException(status_code=401, detail="Email atau Password salah")
     
     # 3. Ambil nama role (Librarian/User) dari tabel relasi
