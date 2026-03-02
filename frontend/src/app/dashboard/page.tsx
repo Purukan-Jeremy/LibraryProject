@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Book,
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   LibraryBig,
   X,
   FileText,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -27,12 +28,31 @@ export default function LibrarianDashboard() {
     isbn: "",
     title: "",
     stock: 0,
-    file_pdf: null as File | null, // ← diubah: File object, bukan string
-    currentPdfName: "", // ← ditambah: simpan nama PDF lama saat edit
+    file_pdf: null as File | null,
+    currentPdfName: "",
     category_name: "",
     publisher_name: "",
     author_name: "",
   });
+
+  // ================= STATE DROPDOWN CATEGORY =================
+  const [categories, setCategories] = useState<
+    { id: number; category_name: string }[]
+  >([]);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const categoryRef = useRef<HTMLDivElement>(null);
+
+  // ================= FETCH CATEGORIES =================
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/categories");
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error("Gagal mengambil categories:", error);
+    }
+  };
 
   // ================= FETCH BUKU DARI BACKEND =================
   const fetchBooks = async () => {
@@ -60,6 +80,21 @@ export default function LibrarianDashboard() {
 
   useEffect(() => {
     fetchBooks();
+    fetchCategories();
+  }, []);
+
+  // ================= TUTUP DROPDOWN JIKA KLIK DI LUAR =================
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        categoryRef.current &&
+        !categoryRef.current.contains(e.target as Node)
+      ) {
+        setIsCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // ================= HANDLE CHANGE FORM =================
@@ -100,6 +135,18 @@ export default function LibrarianDashboard() {
     setFormData({ ...formData, file_pdf: file });
   };
 
+  // ================= HANDLE PILIH CATEGORY DARI DROPDOWN =================
+  const handleSelectCategory = (categoryName: string) => {
+    setFormData({ ...formData, category_name: categoryName });
+    setCategorySearch("");
+    setIsCategoryOpen(false);
+  };
+
+  // ================= FILTER CATEGORY BERDASARKAN SEARCH =================
+  const filteredCategories = categories.filter((c) =>
+    c.category_name.toLowerCase().includes(categorySearch.toLowerCase()),
+  );
+
   // ================= HANDLE EDIT BUTTON =================
   const handleEdit = (book: any) => {
     setIsEditing(true);
@@ -108,8 +155,8 @@ export default function LibrarianDashboard() {
       isbn: book.isbn || "",
       title: book.title || "",
       stock: book.stock || 0,
-      file_pdf: null, // ← reset, user pilih file baru kalau mau ganti
-      currentPdfName: book.file_pdf || "", // ← simpan nama file lama untuk ditampilkan
+      file_pdf: null,
+      currentPdfName: book.file_pdf || "",
       category_name: book.category || "",
       publisher_name: book.publisher || "",
       author_name: book.author || "",
@@ -160,6 +207,7 @@ export default function LibrarianDashboard() {
 
       // Refresh data
       fetchBooks();
+      fetchCategories(); // refresh list category setelah tambah/edit buku
 
       // reset form
       setFormData({
@@ -371,16 +419,11 @@ export default function LibrarianDashboard() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Input teks biasa — sama persis seperti semula, minus file_pdf */}
+              {/* Input teks biasa — sama persis seperti semula, minus category_name */}
               {[
                 { name: "isbn", placeholder: "ISBN" },
                 { name: "title", placeholder: "Book Title" },
                 { name: "stock", placeholder: "Stock", type: "number" },
-                {
-                  name: "category_name",
-                  placeholder: "Category Name",
-                  type: "text",
-                },
                 {
                   name: "author_name",
                   placeholder: "Author Name",
@@ -404,6 +447,82 @@ export default function LibrarianDashboard() {
                   className="px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-800/10"
                 />
               ))}
+
+              {/* ===== DROPDOWN + SEARCH CATEGORY ===== */}
+              <div className="relative" ref={categoryRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCategoryOpen(!isCategoryOpen);
+                    setCategorySearch("");
+                  }}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-800/10 text-left"
+                >
+                  <span
+                    className={
+                      formData.category_name
+                        ? "text-stone-800"
+                        : "text-stone-400"
+                    }
+                  >
+                    {formData.category_name || "Pilih Category"}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-stone-400 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {/* Dropdown Panel */}
+                {isCategoryOpen && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden">
+                    {/* Search input di dalam dropdown */}
+                    <div className="p-2 border-b border-stone-100">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400" />
+                        <input
+                          type="text"
+                          placeholder="Cari category..."
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          className="w-full pl-8 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-800/10"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    {/* List hasil filter */}
+                    <ul className="max-h-44 overflow-y-auto">
+                      {filteredCategories.length > 0 ? (
+                        filteredCategories.map((c) => (
+                          <li
+                            key={c.id}
+                            onClick={() =>
+                              handleSelectCategory(c.category_name)
+                            }
+                            className={`px-4 py-2.5 text-sm cursor-pointer hover:bg-orange-50 hover:text-orange-800 transition-colors
+                              ${formData.category_name === c.category_name ? "bg-orange-50 text-orange-800 font-semibold" : "text-stone-700"}`}
+                          >
+                            {c.category_name}
+                          </li>
+                        ))
+                      ) : (
+                        /* Jika tidak ada hasil, tawarkan buat baru */
+                        <li
+                          onClick={() => handleSelectCategory(categorySearch)}
+                          className="px-4 py-2.5 text-sm cursor-pointer text-orange-700 hover:bg-orange-50 transition-colors flex items-center gap-2"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Buat category "
+                          <span className="font-semibold">
+                            {categorySearch}
+                          </span>
+                          "
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
 
               {/* ← diubah: input file PDF menggantikan input text file_pdf */}
               <div className="md:col-span-2">
