@@ -38,27 +38,29 @@ def save_pdf_file(file: UploadFile) -> str:
 
 # ================= CREATE BOOK =================
 def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None):
-    # 1. Validasi Category
-    if book_data.get("category_id"):
+    # 1. Cari atau buat category
+    category_name = book_data.get("category_name")
+    if category_name:
         db_category = db.query(models.Category).filter(
-            models.Category.id == book_data["category_id"]
+            models.Category.category_name == category_name
         ).first()
         if not db_category:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Category dengan ID {book_data['category_id']} tidak ditemukan"
-            )
+            db_category = models.Category(category_name=category_name)
+            db.add(db_category)
+            db.commit()
+            db.refresh(db_category)
 
-    # 2. Validasi Publisher
-    if book_data.get("publisher_id"):
+    # 2. Cari atau buat publisher
+    publisher_name = book_data.get("publisher_name")
+    if publisher_name:
         db_publisher = db.query(models.Publisher).filter(
-            models.Publisher.id == book_data["publisher_id"]
+            models.Publisher.publisher_name == publisher_name
         ).first()
         if not db_publisher:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Publisher dengan ID {book_data['publisher_id']} tidak ditemukan"
-            )
+            db_publisher = models.Publisher(publisher_name=publisher_name)
+            db.add(db_publisher)
+            db.commit()
+            db.refresh(db_publisher)
 
     # 3. Cari atau buat author
     db_author = db.query(models.Author).filter(
@@ -81,9 +83,9 @@ def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None):
         title=book_data["title"],
         stock=book_data["stock"],
         file_pdf=pdf_filename,
-        category_id=book_data["category_id"],
+        category_name=db_category.category_name if category_name else None,
         author_name=db_author.author_name,
-        publisher_id=book_data["publisher_id"]
+        publisher_name=db_publisher.publisher_name if publisher_name else None
     )
     db.add(db_book)
     db.commit()
@@ -102,8 +104,8 @@ def get_books(db: Session):
             "title": b.title,
             "stock": b.stock,
             "file_pdf": b.file_pdf,
-            "category_id": b.category_id,
-            "publisher_id": b.publisher_id,
+            "category_name": b.category_name,
+            "publisher_name": b.publisher_name,
             "author_name": b.author_name
         })
     return result
@@ -119,27 +121,33 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
             detail=f"Buku dengan ID {book_id} tidak ditemukan"
         )
 
-    # 2. Validasi Category
-    if book_data.get("category_id"):
+    # 2. Handle perubahan Category
+    old_category_name = db_book.category_name
+    new_category_name = book_data.get("category_name")
+    if new_category_name:
         db_category = db.query(models.Category).filter(
-            models.Category.id == book_data["category_id"]
+            models.Category.category_name == new_category_name
         ).first()
         if not db_category:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Category dengan ID {book_data['category_id']} tidak ditemukan"
-            )
+            db_category = models.Category(category_name=new_category_name)
+            db.add(db_category)
+            db.commit()
+            db.refresh(db_category)
+        db_book.category_name = db_category.category_name
 
-    # 3. Validasi Publisher
-    if book_data.get("publisher_id"):
+    # 3. Handle perubahan Publisher
+    old_publisher_name = db_book.publisher_name
+    new_publisher_name = book_data.get("publisher_name")
+    if new_publisher_name:
         db_publisher = db.query(models.Publisher).filter(
-            models.Publisher.id == book_data["publisher_id"]
+            models.Publisher.publisher_name == new_publisher_name
         ).first()
         if not db_publisher:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Publisher dengan ID {book_data['publisher_id']} tidak ditemukan"
-            )
+            db_publisher = models.Publisher(publisher_name=new_publisher_name)
+            db.add(db_publisher)
+            db.commit()
+            db.refresh(db_publisher)
+        db_book.publisher_name = db_publisher.publisher_name
 
     # 4. Handle perubahan Author
     old_author_name = db_book.author_name
@@ -167,13 +175,12 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
     db_book.isbn = book_data["isbn"]
     db_book.title = book_data["title"]
     db_book.stock = book_data["stock"]
-    db_book.category_id = book_data["category_id"]
-    db_book.publisher_id = book_data["publisher_id"]
 
     db.commit()
     db.refresh(db_book)
 
-    # 7. Bersihkan author lama jika tidak punya buku lain
+    # 7. Bersihkan data lama jika tidak punya buku lain (Opsional, tapi konsisten)
+    # Bersihkan author lama
     if old_author_name and old_author_name != new_author_name:
         other_books = db.query(models.Book).filter(
             models.Book.author_name == old_author_name
@@ -184,6 +191,19 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
             ).first()
             if db_old_author:
                 db.delete(db_old_author)
+                db.commit()
+
+    # Bersihkan publisher lama
+    if old_publisher_name and old_publisher_name != new_publisher_name:
+        other_books = db.query(models.Book).filter(
+            models.Book.publisher_name == old_publisher_name
+        ).first()
+        if not other_books:
+            db_old_publisher = db.query(models.Publisher).filter(
+                models.Publisher.publisher_name == old_publisher_name
+            ).first()
+            if db_old_publisher:
+                db.delete(db_old_publisher)
                 db.commit()
 
     return db_book
@@ -199,6 +219,8 @@ def delete_book(db: Session, book_id: int):
         )
 
     author_name = db_book.author_name
+    category_name = db_book.category_name
+    publisher_name = db_book.publisher_name
 
     # Hapus file PDF dari disk jika ada
     if db_book.file_pdf:
@@ -222,4 +244,22 @@ def delete_book(db: Session, book_id: int):
                 db.delete(db_author)
                 db.commit()
 
+    # Hapus publisher jika tidak punya buku lain
+    if publisher_name:
+        other_books = db.query(models.Book).filter(
+            models.Book.publisher_name == publisher_name
+        ).first()
+        if not other_books:
+            db_old_publisher = db.query(models.Publisher).filter(
+                models.Publisher.publisher_name == publisher_name
+            ).first()
+            if db_old_publisher:
+                db.delete(db_old_publisher)
+                db.commit()
+
     return {"detail": "Buku berhasil dihapus"}
+
+# ================= GET ALL CATEGORIES =================
+def get_categories(db: Session):
+    categories = db.query(models.Category).order_by(models.Category.category_name).all()
+    return [{"id": c.id, "category_name": c.category_name} for c in categories]

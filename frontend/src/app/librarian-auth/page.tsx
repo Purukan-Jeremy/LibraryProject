@@ -20,7 +20,7 @@ export default function LibrarianAuthGate() {
       sessionStorage.setItem('isLibrarian', 'true');
       router.push('/dashboard');
     } else {
-      setError('Kode akses salah. Hanya pengelola yang diizinkan masuk.');
+      setError('Incorrect access code. Only administrators are allowed.');
     }
   };
 
@@ -33,7 +33,7 @@ export default function LibrarianAuthGate() {
             <ShieldCheck className="w-8 h-8 text-stone-50" />
           </div>
           <h1 className="text-3xl font-serif font-bold text-stone-900">Librarian Access</h1>
-          <p className="text-stone-500 mt-2 font-medium">Masukkan kode rahasia untuk mengelola perpustakaan</p>
+          <p className="text-stone-500 mt-2 font-medium">Enter the secret code to manage the library</p>
         </div>
 
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-stone-100">
@@ -53,14 +53,14 @@ export default function LibrarianAuthGate() {
             </div>
             
             <button className="w-full bg-stone-900 hover:bg-orange-800 text-white py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98]">
-              Buka Dashboard <ChevronRight className="w-4 h-4" />
+              Open Dashboard <ChevronRight className="w-4 h-4" />
             </button>
           </form>
         </div>
 
         <div className="mt-8 text-center">
           <Link href="/" className="text-stone-400 hover:text-stone-600 text-sm font-medium flex items-center justify-center gap-2">
-             Kembali ke Beranda
+             Back to Home
           </Link>
         </div>
       </div>

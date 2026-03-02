@@ -6,3 +6,4 @@ cryptography
 python-dotenv
 pydantic[email]
 python-multipart
+passlib[argon2]
