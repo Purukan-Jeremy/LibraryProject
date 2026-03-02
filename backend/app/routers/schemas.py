@@ -24,6 +24,7 @@ class UserResponse(BaseModel):
 class BookBase(BaseModel):
     isbn: str
     title: str
+    description: Optional[str] = None
     stock: Optional[int] = 0
     file_pdf: Optional[str] = None
     category_name: Optional[str] = None

@@ -94,6 +94,7 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
 def create_book(
     isbn: str = Form(...),
     title: str = Form(...),
+    description: Optional[str] = Form(None),
     stock: int = Form(...),
     category_name: str = Form(...),
     publisher_name: str = Form(...),
@@ -104,6 +105,7 @@ def create_book(
     book_data = {
         "isbn": isbn,
         "title": title,
+        "description": description,
         "stock": stock,
         "category_name": category_name,
         "publisher_name": publisher_name,
@@ -127,6 +129,7 @@ def update_book(
     book_id: int,
     isbn: str = Form(...),
     title: str = Form(...),
+    description: Optional[str] = Form(None),
     stock: int = Form(...),
     category_name: str = Form(...),
     publisher_name: str = Form(...),
@@ -137,6 +140,7 @@ def update_book(
     book_data = {
         "isbn": isbn,
         "title": title,
+        "description": description,
         "stock": stock,
         "category_name": category_name,
         "publisher_name": publisher_name,
