@@ -16,11 +16,11 @@ import {
   Bell,
   Filter,
   X,
-  Mail,
   Edit,
   Shield,
   Star,
-  Camera,
+  Eye,
+  EyeOff,
   Building2,
   Calendar,
   Barcode,
@@ -37,10 +37,15 @@ export default function LibraryPage() {
   // Profile handling
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isForgetPasswordOpen, setIsForgetPasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [repeatNewPassword, setRepeatNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showRepeatNewPassword, setShowRepeatNewPassword] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [profilePhotoDraft, setProfilePhotoDraft] = useState("");
   const [formData, setFormData] = useState({
-    fullname: "",
-    email: "",
-    password: "",
+    username: "",
   });
 
   // --- STATE BUKU ---
@@ -159,7 +164,16 @@ export default function LibraryPage() {
       router.replace("/login");
       //setUser({ fullname: "Tamu (Preview Mode)" }); //Untuk viewing tanpa login, bisa diaktifkan ini
     } else {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      const profilePhoto = parsedUser.username
+        ? localStorage.getItem(`profile_photo_${parsedUser.username}`)
+        : null;
+
+      if (profilePhoto) {
+        parsedUser.profilePhoto = profilePhoto;
+      }
+
+      setUser(parsedUser);
     }
   }, [router]);
 
@@ -169,16 +183,98 @@ export default function LibraryPage() {
   };
 
   const handleSaveProfile = () => {
+    const nextUsername =
+      formData.username.trim() !== "" ? formData.username.trim() : user.username;
+
     const updatedUser = {
       ...user,
-      fullname: formData.fullname !== "" ? formData.fullname : user.fullname,
-      email: formData.email !== "" ? formData.email : user.email,
+      username: nextUsername,
+      profilePhoto: profilePhotoDraft || "",
     };
+
+    if (user.username && user.username !== nextUsername) {
+      localStorage.removeItem(`profile_photo_${user.username}`);
+    }
+
+    if (profilePhotoDraft) {
+      localStorage.setItem(`profile_photo_${nextUsername}`, profilePhotoDraft);
+    } else {
+      localStorage.removeItem(`profile_photo_${nextUsername}`);
+    }
 
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
     setIsEditing(false);
     alert("Profile successfully updated!");
+  };
+
+  const handleStartEditProfile = () => {
+    setFormData({ username: user.username || "" });
+    setProfilePhotoDraft(user.profilePhoto || "");
+    setIsEditing(true);
+  };
+
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePhotoDraft(String(reader.result || ""));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  useEffect(() => {
+    if (isForgetPasswordOpen) {
+      setNewPassword("");
+      setRepeatNewPassword("");
+      setShowNewPassword(false);
+      setShowRepeatNewPassword(false);
+    }
+  }, [isForgetPasswordOpen]);
+
+  const handleChangePassword = async () => {
+    if (newPassword.trim() === "" || repeatNewPassword.trim() === "") {
+      alert("Password baru dan ulangi password wajib diisi");
+      return;
+    }
+
+    if (newPassword !== repeatNewPassword) {
+      alert("Password baru dan ulangi password harus sama");
+      return;
+    }
+
+    try {
+      setIsUpdatingPassword(true);
+      const loginId = user.email || user.username;
+      const response = await fetch("http://127.0.0.1:8000/api/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          login_id: loginId,
+          new_password: newPassword,
+          confirm_password: repeatNewPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.detail || "Gagal mengubah password");
+      }
+
+      setNewPassword("");
+      setRepeatNewPassword("");
+      setShowNewPassword(false);
+      setShowRepeatNewPassword(false);
+      setIsForgetPasswordOpen(false);
+      alert("Password berhasil diubah. Silakan login dengan password baru.");
+    } catch (error: any) {
+      alert(error.message || "Gagal mengubah password");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   if (!user) return null; // Prevent content flashing before redirect
@@ -452,6 +548,7 @@ export default function LibraryPage() {
             onClick={() => {
               setIsProfileOpen(false);
               setIsEditing(false);
+              setIsForgetPasswordOpen(false);
             }}
           ></div>
 
@@ -462,6 +559,7 @@ export default function LibraryPage() {
                 onClick={() => {
                   setIsProfileOpen(false);
                   setIsEditing(false);
+                  setIsForgetPasswordOpen(false);
                 }}
                 className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all"
               >
@@ -474,15 +572,25 @@ export default function LibraryPage() {
               <div className="relative -mt-14 mb-6 text-center">
                 <div className="w-28 h-28 bg-white rounded-[2rem] p-1.5 shadow-2xl mx-auto relative group">
                   <div className="w-full h-full bg-stone-100 rounded-[1.5rem] flex items-center justify-center text-4xl font-serif font-bold text-orange-800 border border-stone-50 overflow-hidden">
-                    {user.fullname?.charAt(0).toUpperCase()}
+                    {(isEditing ? profilePhotoDraft : user.profilePhoto) ? (
+                      <img
+                        src={isEditing ? profilePhotoDraft : user.profilePhoto}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      user.fullname?.charAt(0).toUpperCase()
+                    )}
                   </div>
                   {isEditing && (
-                    <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-[1.5rem] cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
-                      <Camera className="w-6 h-6 text-white mb-1" />
-                      <span className="text-[8px] text-white font-black uppercase">
-                        Change
-                      </span>
-                      <input type="file" className="hidden" />
+                    <label className="absolute bottom-1.5 right-1.5 w-9 h-9 rounded-full bg-orange-800 text-white flex items-center justify-center shadow-lg cursor-pointer hover:bg-orange-900 transition-colors border-2 border-white">
+                      <Edit className="w-4 h-4" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleProfilePhotoChange}
+                      />
                     </label>
                   )}
                 </div>
@@ -495,7 +603,7 @@ export default function LibraryPage() {
                     <h2 className="text-2xl font-serif font-bold text-stone-900">
                       {user.fullname}
                     </h2>
-                    <p className="text-stone-400 text-sm">{user.email}</p>
+                    <p className="text-stone-400 text-sm">@{user.username}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-8">
@@ -521,10 +629,16 @@ export default function LibraryPage() {
 
                   <div className="space-y-3">
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={handleStartEditProfile}
                       className="w-full py-4 bg-stone-900 hover:bg-orange-800 text-white rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xl active:scale-95"
                     >
                       <Edit className="w-4 h-4" /> Edit Profile
+                    </button>
+                    <button
+                      onClick={() => setIsForgetPasswordOpen(true)}
+                      className="w-full py-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-2xl font-bold text-sm transition-all"
+                    >
+                      Forget Password
                     </button>
                     <button
                       onClick={handleLogout}
@@ -548,36 +662,10 @@ export default function LibraryPage() {
                       </label>
                       <input
                         type="text"
-                        placeholder={user.fullname}
+                        value={formData.username}
                         className="w-full px-5 py-3 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-orange-800/10 outline-none transition-all"
                         onChange={(e) =>
-                          setFormData({ ...formData, fullname: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-stone-400 ml-2">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        placeholder={user.email}
-                        className="w-full px-5 py-3 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-orange-800/10 outline-none transition-all"
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-stone-400 ml-2">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="••••••••"
-                        className="w-full px-5 py-3 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-orange-800/10 outline-none transition-all"
-                        onChange={(e) =>
-                          setFormData({ ...formData, password: e.target.value })
+                          setFormData({ ...formData, username: e.target.value })
                         }
                       />
                     </div>
@@ -599,6 +687,105 @@ export default function LibraryPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isForgetPasswordOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+            onClick={() => setIsForgetPasswordOpen(false)}
+          />
+          <div className="relative bg-white w-full max-w-md rounded-[2rem] shadow-2xl border border-stone-100 p-8">
+            <button
+              onClick={() => setIsForgetPasswordOpen(false)}
+              className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-xl font-serif font-bold text-stone-900 mb-2">
+              Change Password
+            </h3>
+            <p className="text-sm text-stone-500 mb-6">
+              Masukkan password baru, lalu ulangi password baru.
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-stone-400 ml-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    name="new_password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-5 pr-12 py-3 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-orange-800/10 outline-none transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-stone-400 ml-2">
+                  Repeat New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showRepeatNewPassword ? "text" : "password"}
+                    name="repeat_new_password"
+                    autoComplete="new-password"
+                    value={repeatNewPassword}
+                    onChange={(e) => setRepeatNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-5 pr-12 py-3 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-orange-800/10 outline-none transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowRepeatNewPassword(!showRepeatNewPassword)
+                    }
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+                  >
+                    {showRepeatNewPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8">
+              <button
+                onClick={() => setIsForgetPasswordOpen(false)}
+                className="flex-1 py-4 bg-stone-100 text-stone-500 rounded-2xl font-bold text-sm hover:bg-stone-200 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleChangePassword}
+                disabled={isUpdatingPassword}
+                className="flex-1 py-4 bg-orange-800 text-white rounded-2xl font-bold text-sm hover:bg-orange-900 transition-all shadow-lg shadow-orange-900/20 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isUpdatingPassword ? "Saving..." : "Save Password"}
+              </button>
             </div>
           </div>
         </div>

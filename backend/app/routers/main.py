@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from typing import Optional
+from passlib.exc import UnknownHashError
 import os
 
 app = FastAPI()
@@ -20,7 +21,7 @@ app.add_middleware(
 # Izinkan Frontend mengakses API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,11 +60,29 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
 # --- ENDPOINT LOGIN ---
 @app.post("/api/login")
 def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(database.get_db)):
-    # 1. Cari user berdasarkan email
-    user = db.query(models.User).filter(models.User.email == data.email).first()
+    login_value = data.email.strip()
+
+    # 1. Cari user berdasarkan email (fallback ke username untuk kompatibilitas)
+    user = db.query(models.User).filter(models.User.email == login_value).first()
+    if not user:
+        user = db.query(models.User).filter(models.User.username == login_value).first()
     
-    # 2. Cek apakah user ada dan password cocok (menggunakan verifikasi hash)
-    if not user or not auth_utils.verify_password(data.password, user.password):
+    # 2. Cek user + verifikasi password.
+    #    Jika akun lama masih simpan plain password, izinkan sekali lalu migrasi ke hash.
+    if not user:
+        raise HTTPException(status_code=401, detail="Email atau Password salah")
+
+    is_valid_password = False
+    try:
+        is_valid_password = auth_utils.verify_password(data.password, user.password)
+    except (UnknownHashError, ValueError):
+        # Legacy fallback: password tersimpan plain text.
+        if data.password == user.password:
+            is_valid_password = True
+            user.password = auth_utils.get_password_hash(data.password)
+            db.commit()
+
+    if not is_valid_password:
         raise HTTPException(status_code=401, detail="Email atau Password salah")
     
     # 3. Ambil nama role (Librarian/User) dari tabel relasi
@@ -86,6 +105,33 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
             "role": role_name
         }
     }
+
+@app.post("/api/change-password")
+def change_password(data: schemas.ChangePasswordRequest, db: Session = Depends(database.get_db)):
+    login_id = data.login_id.strip()
+    new_password = data.new_password.strip()
+    confirm_password = data.confirm_password.strip()
+
+    if not login_id:
+        raise HTTPException(status_code=400, detail="User tidak valid")
+
+    if not new_password:
+        raise HTTPException(status_code=400, detail="Password baru wajib diisi")
+
+    if new_password != confirm_password:
+        raise HTTPException(status_code=400, detail="Ulangi password harus sama")
+
+    user = db.query(models.User).filter(
+        (models.User.email == login_id) | (models.User.username == login_id)
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    user.password = auth_utils.get_password_hash(new_password)
+    db.commit()
+
+    return {"message": "Password berhasil diubah"}
 
 # ==============================
 # --- ENDPOINT TAMBAH BUKU ---

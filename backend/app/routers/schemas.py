@@ -9,8 +9,13 @@ class UserCreate(BaseModel):
     role_id: int  # 1 untuk Librarian, 2 untuk User (sesuaikan dengan isi tbl_roles)
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
+
+class ChangePasswordRequest(BaseModel):
+    login_id: str
+    new_password: str
+    confirm_password: str
 
 class UserResponse(BaseModel):
     id: int
