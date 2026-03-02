@@ -69,7 +69,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-full border border-stone-200 shadow-sm">
               <div className="flex flex-col text-right">
                 <span className="text-xs text-stone-400 font-medium">
-                  Halo,
+                  Hello,
                 </span>
                 <span className="text-sm font-bold text-stone-800 leading-none">
                   {user.fullname}
@@ -81,7 +81,7 @@ export default function LandingPage() {
               <button
                 onClick={handleLogout}
                 className="p-1.5 text-stone-400 hover:text-red-600 transition-colors"
-                title="Keluar"
+                title="Logout"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -93,7 +93,7 @@ export default function LandingPage() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="px-6 py-2 rounded-full border border-stone-300 text-stone-700 hover:bg-stone-100 transition-all font-medium text-sm flex items-center gap-2"
               >
-                Masuk
+                Login
                 <div
                   className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                 >
@@ -112,7 +112,7 @@ export default function LandingPage() {
                       <div className="flex flex-col">
                         <span className="text-sm font-bold">As a User</span>
                         <span className="text-[10px] text-stone-400 font-medium">
-                          Mulai membaca buku
+                          Start reading books
                         </span>
                       </div>
                     </div>
@@ -130,7 +130,7 @@ export default function LandingPage() {
                           As a Librarian
                         </span>
                         <span className="text-[10px] text-stone-400 font-medium">
-                          Kelola perpustakaan
+                          Manage library
                         </span>
                       </div>
                     </div>
@@ -148,23 +148,22 @@ export default function LandingPage() {
           <div className="space-y-8 text-left">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold">
               <Coffee className="w-3.5 h-3.5" />
-              <span>Teman Membaca Ternyaman</span>
+              <span>Coziest Reading Partner</span>
             </div>
 
             <h1 className="text-5xl md:text-6xl font-serif font-bold text-stone-900 leading-tight">
-              Temukan Ketenangan di Setiap{" "}
-              <span className="italic text-orange-800">Halaman.</span>
+              Find Peace in Every{" "}
+              <span className="italic text-orange-800">Page.</span>
             </h1>
 
             <p className="text-lg text-stone-600 leading-relaxed max-w-lg">
-              Libriofy hadir untuk membantu Anda membaca buku yang hangat dan
-              tenang.
+              Libriofy is here to help you find warm and peaceful reading moments.
             </p>
 
             <div className="flex flex-wrap gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
               <button className="group relative flex items-center gap-3 bg-stone-900 hover:bg-orange-800 text-stone-50 px-8 py-4 rounded-2xl font-medium transition-all shadow-lg hover:shadow-orange-900/20">
                 <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span>Cari Buku Impian Anda</span>
+                <span>Find Your Dream Book</span>
                 <div className="ml-2 p-1 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
                   <ChevronRight className="w-4 h-4" />
                 </div>
@@ -176,7 +175,7 @@ export default function LandingPage() {
             <div className="aspect-[4/5] bg-stone-200 rounded-[3rem] overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
               <div className="absolute inset-0 bg-gradient-to-tr from-orange-900/20 to-transparent" />
               <div className="flex items-center justify-center h-full text-stone-400 font-serif italic text-xl">
-                Nuansa Hangat
+                Warm Vibe
               </div>
             </div>
 

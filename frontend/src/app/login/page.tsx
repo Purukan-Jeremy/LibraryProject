@@ -23,12 +23,12 @@ export default function LoginPage() {
       // Simpan data user ke localStorage
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
-      alert(`Selamat datang kembali, ${response.data.user.fullname}!`);
+      alert(`Welcome back, ${response.data.user.fullname}!`);
       
       // Redirect ke halaman librarypage sesuai permintaanmu
       router.push('/librarypage'); 
     } catch (error: any) {
-      const msg = error.response?.data?.detail || "Gagal masuk, periksa email dan password Anda";
+      const msg = error.response?.data?.detail || "Login failed, please check your email and password";
       alert(msg);
     }
   };
@@ -38,7 +38,7 @@ export default function LoginPage() {
       {/* Tombol Kembali ke Landing Page */}
       <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-colors">
         <ChevronLeft className="w-5 h-5" />
-        <span className="text-sm font-medium">Kembali</span>
+        <span className="text-sm font-medium">Back</span>
       </Link>
 
       <div className="w-full max-w-md">
@@ -47,8 +47,8 @@ export default function LoginPage() {
           <div className="inline-flex p-3 bg-orange-800 rounded-2xl mb-4 shadow-lg shadow-orange-900/20">
             <Book className="w-8 h-8 text-stone-50" />
           </div>
-          <h1 className="text-3xl font-serif font-bold text-stone-900">Selamat Datang</h1>
-          <p className="text-stone-500 mt-2">Masuk untuk mulai membaca buku-buku favoritmu</p>
+          <h1 className="text-3xl font-serif font-bold text-stone-900">Welcome Back</h1>
+          <p className="text-stone-500 mt-2">Login to start reading your favorite books</p>
         </div>
 
         {/* Form Login */}
@@ -60,7 +60,7 @@ export default function LoginPage() {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                 <input 
                   type="email" 
-                  placeholder="nama@email.com"
+                  placeholder="name@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -70,7 +70,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-stone-700 ml-1">Kata Sandi</label>
+              <label className="text-sm font-semibold text-stone-700 ml-1">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                 <input 
@@ -95,16 +95,16 @@ export default function LoginPage() {
               type="submit"
               className="w-full bg-stone-900 hover:bg-orange-800 text-stone-50 py-4 rounded-2xl font-bold shadow-lg shadow-stone-900/10 transition-all transform active:scale-[0.98]"
             >
-              Masuk Sekarang
+              Login Now
             </button>
           </form>
 
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-stone-500 text-sm">
-              Belum mempunyai akun?{' '}
+              Don't have an account?{' '}
               <Link href="/register" className="text-orange-800 font-bold hover:underline decoration-2 underline-offset-4">
-                Buat Akun
+                Create Account
               </Link>
             </p>
           </div>

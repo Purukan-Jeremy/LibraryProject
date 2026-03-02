@@ -28,13 +28,13 @@ export default function RegisterPage() {
     };
 
     await axios.post("http://localhost:8000/api/register", payload);
-    alert("Akun berhasil dibuat! Silakan login.");
+    alert("Account successfully created! Please login.");
     router.push('/login');
   } catch (error: any) {
     // Ini akan memunculkan pesan detail dari FastAPI (misal: "Username sudah ada")
     const detailError = error.response?.data?.detail;
     console.log("Full Error:", error.response?.data);
-    alert(detailError || "Gagal mendaftar: Pastikan Backend sudah jalan");
+    alert(detailError || "Registration failed: Make sure the Backend is running");
   }
 };
 
@@ -47,7 +47,7 @@ export default function RegisterPage() {
       {/* Tombol Kembali */}
       <Link href="/login" className="absolute top-8 left-8 flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-colors">
         <ChevronLeft className="w-5 h-5" />
-        <span className="text-sm font-medium">Kembali ke Login</span>
+        <span className="text-sm font-medium">Back to Login</span>
       </Link>
 
       <div className="w-full max-w-md">
@@ -56,8 +56,8 @@ export default function RegisterPage() {
           <div className="inline-flex p-3 bg-orange-800 rounded-2xl mb-4 shadow-lg shadow-orange-900/20">
             <Book className="w-8 h-8 text-stone-50" />
           </div>
-          <h1 className="text-3xl font-serif font-bold text-stone-900">Mulai Petualanganmu</h1>
-          <p className="text-stone-500 mt-2">Buat akun Libriofy untuk menyimpan koleksi bukumu</p>
+          <h1 className="text-3xl font-serif font-bold text-stone-900">Start Your Adventure</h1>
+          <p className="text-stone-500 mt-2">Create a Libriofy account to save your book collection</p>
         </div>
 
 
@@ -68,7 +68,7 @@ export default function RegisterPage() {
             
             {/* Input Nama Lengkap */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-stone-700 ml-1">Nama Lengkap</label>
+              <label className="text-sm font-semibold text-stone-700 ml-1">Full Name</label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                 <input 
@@ -76,7 +76,7 @@ export default function RegisterPage() {
                   type="text" 
                   value={formData.fullName}
                   onChange={handleChange}
-                  placeholder="Nama Anda"
+                  placeholder="Your Name"
                   required // Tambahkan required untuk validasi dasar
                   className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-orange-800/20 focus:border-orange-800 outline-none transition-all text-stone-800"
                 />
@@ -111,7 +111,7 @@ export default function RegisterPage() {
                   type="email" 
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="nama@email.com"
+                  placeholder="name@email.com"
                   required
                   className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-orange-800/20 focus:border-orange-800 outline-none transition-all text-stone-800"
                 />
@@ -120,7 +120,7 @@ export default function RegisterPage() {
 
             {/* Input Password */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-stone-700 ml-1">Kata Sandi</label>
+              <label className="text-sm font-semibold text-stone-700 ml-1">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                 <input 
@@ -147,16 +147,16 @@ export default function RegisterPage() {
               type="submit" // Pastikan type adalah submit
               className="w-full bg-orange-800 hover:bg-orange-900 text-stone-50 py-4 rounded-2xl font-bold shadow-lg shadow-orange-900/10 transition-all transform active:scale-[0.98] mt-4"
             >
-              Daftar Sekarang
+              Register Now
             </button>
           </form>
 
           {/* Footer Form */}
           <div className="mt-8 text-center border-t border-stone-100 pt-6">
             <p className="text-stone-500 text-sm">
-              Sudah memiliki akun?{' '}
+              Already have an account?{' '}
               <Link href="/login" className="text-stone-900 font-bold hover:text-orange-800 transition-colors decoration-2 underline-offset-4">
-                Masuk di sini
+                Login here
               </Link>
             </p>
           </div>
