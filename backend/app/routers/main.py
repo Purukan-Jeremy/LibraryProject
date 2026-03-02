@@ -128,3 +128,7 @@ def update_book(
 @app.delete("/api/books/{book_id}")
 def delete_book(book_id: int, db: Session = Depends(database.get_db)):
     return crud.delete_book(db=db, book_id=book_id)
+
+@app.get("/api/categories")
+def get_categories(db: Session = Depends(database.get_db)):
+    return crud.get_categories(db)

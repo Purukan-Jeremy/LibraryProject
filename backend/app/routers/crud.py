@@ -192,19 +192,6 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
             if db_old_author:
                 db.delete(db_old_author)
                 db.commit()
-    
-    # Bersihkan category lama
-    if old_category_name and old_category_name != new_category_name:
-        other_books = db.query(models.Book).filter(
-            models.Book.category_name == old_category_name
-        ).first()
-        if not other_books:
-            db_old_category = db.query(models.Category).filter(
-                models.Category.category_name == old_category_name
-            ).first()
-            if db_old_category:
-                db.delete(db_old_category)
-                db.commit()
 
     # Bersihkan publisher lama
     if old_publisher_name and old_publisher_name != new_publisher_name:
@@ -257,19 +244,6 @@ def delete_book(db: Session, book_id: int):
                 db.delete(db_author)
                 db.commit()
 
-    # Hapus category jika tidak punya buku lain
-    if category_name:
-        other_books = db.query(models.Book).filter(
-            models.Book.category_name == category_name
-        ).first()
-        if not other_books:
-            db_old_category = db.query(models.Category).filter(
-                models.Category.category_name == category_name
-            ).first()
-            if db_old_category:
-                db.delete(db_old_category)
-                db.commit()
-
     # Hapus publisher jika tidak punya buku lain
     if publisher_name:
         other_books = db.query(models.Book).filter(
@@ -284,3 +258,8 @@ def delete_book(db: Session, book_id: int):
                 db.commit()
 
     return {"detail": "Buku berhasil dihapus"}
+
+# ================= GET ALL CATEGORIES =================
+def get_categories(db: Session):
+    categories = db.query(models.Category).order_by(models.Category.category_name).all()
+    return [{"id": c.id, "category_name": c.category_name} for c in categories]
