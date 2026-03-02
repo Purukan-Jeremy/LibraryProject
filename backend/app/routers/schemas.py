@@ -20,3 +20,23 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class BookBase(BaseModel):
+    isbn: str
+    title: str
+    stock: Optional[int] = 0
+    file_pdf: Optional[str] = None
+    category_id: Optional[int] = None
+    publisher_id: Optional[int] = None
+    author_name: Optional[str] = None
+
+
+class BookCreate(BookBase):
+    pass
+
+
+class Book(BookBase):
+    id: int
+
+    class Config:
+        from_attributes = True
