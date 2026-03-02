@@ -40,23 +40,23 @@ export default function LibraryPage() {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      title: "Buku Tersedia",
-      message: "Buku 'Atomic Habits' yang Anda tunggu sudah tersedia.",
-      time: "2 jam yang lalu",
+      title: "Book Available",
+      message: "The book 'Atomic Habits' you were waiting for is now available.",
+      time: "2 hours ago",
       unread: true,
     },
     {
       id: 2,
-      title: "Pengingat",
-      message: "Batas peminjaman buku 'Dune' sisa 3 hari lagi.",
-      time: "5 jam yang lalu",
+      title: "Reminder",
+      message: "Loan period for 'Dune' expires in 3 days.",
+      time: "5 hours ago",
       unread: true,
     },
     {
       id: 3,
-      title: "Update Sistem",
-      message: "Libriofy kini hadir dengan fitur Edit Profil.",
-      time: "1 hari yang lalu",
+      title: "System Update",
+      message: "Libriofy now comes with an Edit Profile feature.",
+      time: "1 day ago",
       unread: false,
     },
   ]);
@@ -97,7 +97,7 @@ export default function LibraryPage() {
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
     setIsEditing(false);
-    alert("Profil berhasil diperbarui!");
+    alert("Profile successfully updated!");
   };
 
   return (
@@ -120,19 +120,19 @@ export default function LibraryPage() {
                 href="/librarypage"
                 className="text-orange-800 flex items-center gap-2"
               >
-                <LibraryBig className="w-4 h-4" /> Jelajah Katalog
+                <LibraryBig className="w-4 h-4" /> Explore Catalog
               </Link>
               <Link
                 href="/history"
                 className="hover:text-orange-800 transition-colors flex items-center gap-2"
               >
-                <Bookmark className="w-4 h-4" /> Pinjaman Saya
+                <Bookmark className="w-4 h-4" /> My Loans
               </Link>
               <Link
                 href="/favorites"
                 className="hover:text-orange-800 transition-colors flex items-center gap-2"
               >
-                <Heart className="w-4 h-4" /> Koleksi Favorit
+                <Heart className="w-4 h-4" /> Favorite Collection
               </Link>
             </div>
           </div>
@@ -163,14 +163,14 @@ export default function LibraryPage() {
                     <div className="absolute right-0 mt-4 w-80 bg-white rounded-[2rem] shadow-2xl border border-stone-100 py-6 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right overflow-hidden">
                       <div className="px-6 mb-4 flex items-center justify-between">
                         <h4 className="font-serif font-bold text-stone-900">
-                          Notifikasi
+                          Notifications
                         </h4>
                         {hasUnread && (
                           <button
                             onClick={markAllAsRead}
                             className="text-[10px] font-black text-orange-800 hover:underline"
                           >
-                            TANDAI DIBACA
+                            MARK ALL AS READ
                           </button>
                         )}
                       </div>
@@ -222,7 +222,7 @@ export default function LibraryPage() {
                 <button
                   onClick={handleLogout}
                   className="p-2 text-stone-300 hover:text-red-600 transition-colors"
-                  title="Keluar Aplikasi"
+                  title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -238,10 +238,10 @@ export default function LibraryPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-serif font-bold text-stone-900">
-              Katalog Perpustakaan
+              Library Catalog
             </h1>
             <p className="text-stone-500 mt-1">
-              Temukan bacaan yang sesuai dengan suasana hatimu hari ini.
+              Find a read that matches your mood today.
             </p>
           </div>
 
@@ -250,7 +250,7 @@ export default function LibraryPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <input
                 type="text"
-                placeholder="Cari judul, penulis, atau ISBN..."
+                placeholder="Search by title, author, or ISBN..."
                 className="pl-12 pr-6 py-3 bg-white border border-stone-200 rounded-2xl text-sm w-full md:w-80 shadow-sm focus:ring-2 focus:ring-orange-800/10 outline-none transition-all"
               />
             </div>
@@ -268,13 +268,13 @@ export default function LibraryPage() {
               <div className="aspect-[3/4] bg-stone-200 rounded-[2rem] mb-4 overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300 relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                 <div className="flex items-center justify-center h-full text-stone-400 italic text-sm">
-                  Sampul Buku
+                  Book Cover
                 </div>
               </div>
               <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors">
-                Judul Buku {item}
+                Book Title {item}
               </h3>
-              <p className="text-xs text-stone-500 font-medium">Penulis Buku</p>
+              <p className="text-xs text-stone-500 font-medium">Book Author</p>
             </div>
           ))}
         </div>
@@ -316,7 +316,7 @@ export default function LibraryPage() {
                     <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-[1.5rem] cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
                       <Camera className="w-6 h-6 text-white mb-1" />
                       <span className="text-[8px] text-white font-black uppercase">
-                        Ganti
+                        Change
                       </span>
                       <input type="file" className="hidden" />
                     </label>
@@ -346,11 +346,11 @@ export default function LibraryPage() {
                     </div>
                     <div className="p-4 bg-stone-50 rounded-3xl border border-stone-100 text-center">
                       <p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">
-                        Total Pinjaman
+                        Total Loans
                       </p>
                       <p className="text-sm font-bold text-stone-700 flex items-center justify-center gap-1.5">
                         <LibraryBig className="w-3.5 h-3.5 text-orange-800" />{" "}
-                        12 Buku
+                        12 Books
                       </p>
                     </div>
                   </div>
@@ -360,13 +360,13 @@ export default function LibraryPage() {
                       onClick={() => setIsEditing(true)}
                       className="w-full py-4 bg-stone-900 hover:bg-orange-800 text-white rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xl active:scale-95"
                     >
-                      <Edit className="w-4 h-4" /> Edit Profil
+                      <Edit className="w-4 h-4" /> Edit Profile
                     </button>
                     <button
                       onClick={handleLogout}
                       className="w-full py-4 text-red-500 font-bold text-sm hover:bg-red-50 rounded-2xl transition-all"
                     >
-                      Keluar dari Akun
+                      Logout from Account
                     </button>
                   </div>
                 </div>
@@ -374,7 +374,7 @@ export default function LibraryPage() {
                 /* TAMPILAN EDIT MODE */
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <h3 className="text-center font-bold text-stone-900 mb-6 uppercase text-xs tracking-[0.2em]">
-                    Pengaturan Akun
+                    Account Settings
                   </h3>
 
                   <div className="space-y-4">
@@ -406,7 +406,7 @@ export default function LibraryPage() {
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-stone-400 ml-2">
-                        Password Baru
+                        New Password
                       </label>
                       <input
                         type="password"
@@ -424,13 +424,13 @@ export default function LibraryPage() {
                       onClick={() => setIsEditing(false)}
                       className="flex-1 py-4 bg-stone-100 text-stone-500 rounded-2xl font-bold text-sm hover:bg-stone-200 transition-all"
                     >
-                      Batal
+                      Cancel
                     </button>
                     <button
                       onClick={handleSaveProfile}
                       className="flex-1 py-4 bg-orange-800 text-white rounded-2xl font-bold text-sm hover:bg-orange-900 transition-all shadow-lg shadow-orange-900/20 active:scale-95"
                     >
-                      Simpan
+                      Save
                     </button>
                   </div>
                 </div>

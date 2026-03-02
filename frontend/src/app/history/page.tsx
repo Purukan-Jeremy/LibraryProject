@@ -64,16 +64,16 @@ export default function LoanHistoryPage() {
           className="inline-flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-colors mb-8 group"
         >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-medium text-sm">Kembali ke Perpustakaan</span>
+          <span className="font-medium text-sm">Back to Library</span>
         </Link>
 
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-serif font-bold text-stone-900 mb-2">
-              Riwayat Peminjaman
+              Loan History
             </h1>
             <p className="text-stone-500">
-              Pantau aktivitas membaca dan status buku Anda.
+              Monitor your reading activity and book status.
             </p>
           </div>
 
@@ -83,7 +83,7 @@ export default function LoanHistoryPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <input
                 type="text"
-                placeholder="Cari judul buku..."
+                placeholder="Search book title..."
                 className="pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-2xl text-sm focus:ring-2 focus:ring-orange-800/10 outline-none w-64"
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -97,19 +97,19 @@ export default function LoanHistoryPage() {
             onClick={() => setFilterStatus("ALL")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "ALL" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            Semua
+            All
           </button>
           <button
             onClick={() => setFilterStatus("BORROWED")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "BORROWED" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            Dipinjam
+            Borrowed
           </button>
           <button
             onClick={() => setFilterStatus("RETURNED")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "RETURNED" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            Dikembalikan
+            Returned
           </button>
         </div>
 
@@ -138,10 +138,10 @@ export default function LoanHistoryPage() {
                         <Calendar className="w-4 h-4" /> {loan.date}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" /> Durasi: 7 Hari
+                        <Clock className="w-4 h-4" /> Duration: 7 Days
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4" /> Jumlah:{" "}
+                        <CheckCircle2 className="w-4 h-4" /> Quantity:{" "}
                         {loan.quantity}
                       </span>
                     </div>
@@ -154,11 +154,11 @@ export default function LoanHistoryPage() {
                   >
                     {loan.status === "BORROWED" ? (
                       <span className="flex items-center gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5" /> Sedang Dipinjam
+                        <AlertCircle className="w-3.5 h-3.5" /> Currently Borrowed
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Sudah Kembali
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Returned
                       </span>
                     )}
                   </span>
@@ -171,7 +171,7 @@ export default function LoanHistoryPage() {
                 <Search className="text-stone-300 w-8 h-8" />
               </div>
               <p className="text-stone-400 font-medium">
-                Tidak ada riwayat yang ditemukan.
+                No history found.
               </p>
             </div>
           )}

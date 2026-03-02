@@ -21,7 +21,7 @@ export default function FavoritesPage() {
       id: 1,
       title: "Laskar Pelangi",
       author: "Andrea Hirata",
-      category: "Fiksi",
+      category: "Fiction",
       rating: 4.9,
       stock: 12,
     },
@@ -29,7 +29,7 @@ export default function FavoritesPage() {
       id: 2,
       title: "Filosofi Teras",
       author: "Henry Manampiring",
-      category: "Filsafat",
+      category: "Philosophy",
       rating: 4.8,
       stock: 5,
     },
@@ -37,7 +37,7 @@ export default function FavoritesPage() {
       id: 3,
       title: "Cosmos",
       author: "Carl Sagan",
-      category: "Sains",
+      category: "Science",
       rating: 4.9,
       stock: 2,
     },
@@ -61,7 +61,7 @@ export default function FavoritesPage() {
         >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold text-sm tracking-tight">
-            Kembali ke Perpustakaan
+            Back to Library
           </span>
         </Link>
 
@@ -70,14 +70,14 @@ export default function FavoritesPage() {
             <div className="flex items-center gap-3 text-red-500 mb-2">
               <Heart className="w-6 h-6 fill-current" />
               <span className="text-xs font-black uppercase tracking-[0.3em]">
-                Koleksi Pribadi
+                Personal Collection
               </span>
             </div>
             <h1 className="text-5xl font-serif font-bold text-stone-900">
-              Buku Favorit
+              Favorite Books
             </h1>
             <p className="text-stone-500">
-              Daftar buku yang telah Anda tandai sebagai favorit.
+              List of books you have marked as favorites.
             </p>
           </div>
 
@@ -85,7 +85,7 @@ export default function FavoritesPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300 group-focus-within:text-orange-800 transition-colors" />
             <input
               type="text"
-              placeholder="Cari di favorit..."
+              placeholder="Search in favorites..."
               className="pl-12 pr-6 py-4 bg-white border border-stone-200 rounded-[1.5rem] text-sm focus:ring-4 focus:ring-orange-800/5 outline-none w-full md:w-80 shadow-sm transition-all"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -127,7 +127,7 @@ export default function FavoritesPage() {
 
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-[10px] font-bold text-stone-400 uppercase tracking-tighter">
-                        <span>Tersedia</span>
+                        <span>Available</span>
                         <span
                           className={
                             book.stock > 0 ? "text-green-600" : "text-red-600"
@@ -138,7 +138,7 @@ export default function FavoritesPage() {
                       </div>
                       <div className="flex gap-2">
                         <button className="flex-1 bg-stone-900 hover:bg-orange-800 text-white py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
-                          Pinjam <ExternalLink size={14} />
+                          Borrow <ExternalLink size={14} />
                         </button>
                         <button
                           onClick={() => removeFavorite(book.id)}
@@ -157,16 +157,16 @@ export default function FavoritesPage() {
           <div className="text-center py-32 bg-white rounded-[3rem] border border-dashed border-stone-200">
             <Heart className="w-12 h-12 text-stone-100 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-stone-800">
-              Koleksi masih kosong
+              Collection is still empty
             </h3>
             <p className="text-stone-400 max-w-xs mx-auto text-sm mt-2">
-              Anda belum menandai buku manapun sebagai favorit.
+              You haven't marked any books as favorites yet.
             </p>
             <Link
               href="/librarypage"
               className="inline-block mt-8 px-8 py-3 bg-orange-800 text-white rounded-xl font-bold text-sm shadow-lg shadow-orange-900/10 hover:-translate-y-1 transition-all"
             >
-              Cari Buku Sekarang
+              Search Books Now
             </Link>
           </div>
         )}
