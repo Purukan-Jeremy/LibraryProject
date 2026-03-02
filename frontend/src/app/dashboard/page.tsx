@@ -54,7 +54,7 @@ export default function LibrarianDashboard() {
       setBooks(formattedBooks);
     } catch (error) {
       console.error(error);
-      alert("Gagal mengambil daftar buku dari server");
+      alert("Failed to fetch book list from server");
     }
   };
 
@@ -77,14 +77,14 @@ export default function LibrarianDashboard() {
 
     // Validasi content-type
     if (file.type !== "application/pdf") {
-      alert("❌ Hanya file PDF yang diperbolehkan!");
+      alert("❌ Only PDF files are allowed!");
       e.target.value = "";
       return;
     }
 
     // Validasi ekstensi
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      alert("❌ Ekstensi file harus .pdf!");
+      alert("❌ File extension must be .pdf!");
       e.target.value = "";
       return;
     }
@@ -92,7 +92,7 @@ export default function LibrarianDashboard() {
     // Validasi ukuran maksimal 10MB
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert("❌ Ukuran file maksimal 10MB!");
+      alert("❌ Maximum file size is 10MB!");
       e.target.value = "";
       return;
     }
@@ -147,12 +147,12 @@ export default function LibrarianDashboard() {
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.detail || "Gagal menyimpan buku");
+        alert(result.detail || "Failed to save book");
         return;
       }
 
       alert(
-        isEditing ? "Buku berhasil diperbarui!" : "Buku berhasil disimpan!",
+        isEditing ? "Book successfully updated!" : "Book successfully saved!",
       );
       setIsModalOpen(false);
       setIsEditing(false);
@@ -174,13 +174,13 @@ export default function LibrarianDashboard() {
       });
     } catch (error) {
       console.error(error);
-      alert("Tidak dapat terhubung ke server");
+      alert("Could not connect to server");
     }
   };
 
   // ================= HAPUS BUKU =================
   const handleDelete = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus buku ini?")) return;
+    if (!confirm("Are you sure you want to delete this book?")) return;
 
     try {
       const response = await fetch(`http://127.0.0.1:8000/api/books/${id}`, {
@@ -189,15 +189,15 @@ export default function LibrarianDashboard() {
 
       if (!response.ok) {
         const result = await response.json();
-        alert(result.detail || "Gagal menghapus buku");
+        alert(result.detail || "Failed to delete book");
         return;
       }
 
       setBooks((prev) => prev.filter((book) => book.id !== id));
-      alert("Buku berhasil dihapus!");
+      alert("Book successfully deleted!");
     } catch (error) {
       console.error(error);
-      alert("Tidak dapat terhubung ke server");
+      alert("Could not connect to server");
     }
   };
 
@@ -225,14 +225,14 @@ export default function LibrarianDashboard() {
             </button>
             <button className="flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-all">
               <LibraryBig className="w-4 h-4" />
-              Katalog Buku
+              Book Catalog
             </button>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold leading-none">Admin Pustaka</p>
+            <p className="text-sm font-bold leading-none">Library Admin</p>
             <p className="text-[10px] text-stone-400 font-medium">
               Librarian Role
             </p>
@@ -255,10 +255,10 @@ export default function LibrarianDashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div>
             <h1 className="text-3xl font-serif font-bold text-stone-900">
-              Selamat Datang, Librarian
+              Welcome, Librarian
             </h1>
             <p className="text-stone-500">
-              Pantau dan kelola koleksi buku perpustakaan Anda di sini.
+              Monitor and manage your library's book collection here.
             </p>
           </div>
 
@@ -280,7 +280,7 @@ export default function LibrarianDashboard() {
             className="flex items-center justify-center gap-2 bg-stone-900 hover:bg-orange-800 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95"
           >
             <Plus className="w-5 h-5" />
-            Tambah Buku Baru
+            Add New Book
           </button>
         </div>
 
@@ -288,13 +288,13 @@ export default function LibrarianDashboard() {
         <div className="bg-white rounded-[2.5rem] border border-stone-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-stone-100 flex items-center justify-between flex-wrap gap-4">
             <h3 className="font-serif font-bold text-xl">
-              Daftar Inventaris Buku
+              Book Inventory List
             </h3>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <input
                 type="text"
-                placeholder="Cari buku..."
+                placeholder="Search books..."
                 className="pl-10 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-800/10 w-64"
               />
             </div>
@@ -304,10 +304,10 @@ export default function LibrarianDashboard() {
             <table className="w-full text-left">
               <thead className="bg-stone-50 text-stone-400 text-[10px] uppercase font-bold tracking-widest">
                 <tr>
-                  <th className="px-6 py-4">Judul Buku</th>
-                  <th className="px-6 py-4">Penulis</th>
-                  <th className="px-6 py-4">Stok</th>
-                  <th className="px-6 py-4 text-center">Aksi</th>
+                  <th className="px-6 py-4">Book Title</th>
+                  <th className="px-6 py-4">Author</th>
+                  <th className="px-6 py-4">Stock</th>
+                  <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-50">
@@ -367,15 +367,15 @@ export default function LibrarianDashboard() {
             </button>
 
             <h2 className="text-2xl font-serif font-bold mb-6">
-              {isEditing ? "Edit Buku" : "Tambah Buku Baru"}
+              {isEditing ? "Edit Book" : "Add New Book"}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Input teks biasa — sama persis seperti semula, minus file_pdf */}
               {[
                 { name: "isbn", placeholder: "ISBN" },
-                { name: "title", placeholder: "Judul Buku" },
-                { name: "stock", placeholder: "Stok", type: "number" },
+                { name: "title", placeholder: "Book Title" },
+                { name: "stock", placeholder: "Stock", type: "number" },
                 {
                   name: "category_name",
                   placeholder: "Category Name",
@@ -410,7 +410,7 @@ export default function LibrarianDashboard() {
                 <label className="block text-sm font-semibold text-stone-600 mb-2">
                   File PDF{" "}
                   <span className="font-normal text-stone-400">
-                    (maks. 10MB, hanya .pdf)
+                    (max. 10MB, only .pdf)
                   </span>
                 </label>
 
@@ -419,7 +419,7 @@ export default function LibrarianDashboard() {
                   <div className="flex items-center gap-2 mb-2 p-2 bg-orange-50 rounded-lg">
                     <FileText className="w-4 h-4 text-orange-700 flex-shrink-0" />
                     <span className="text-xs text-stone-500">
-                      File saat ini:
+                      Current file:
                     </span>
                     <a
                       href={`http://127.0.0.1:8000/uploads/pdf/${formData.currentPdfName}`}
@@ -430,7 +430,7 @@ export default function LibrarianDashboard() {
                       {formData.currentPdfName}
                     </a>
                     <span className="text-xs text-stone-400 ml-auto whitespace-nowrap">
-                      (kosongkan jika tidak ingin mengganti)
+                      (leave empty if you don't want to change)
                     </span>
                   </div>
                 )}
@@ -464,7 +464,7 @@ export default function LibrarianDashboard() {
                 onClick={handleSubmit}
                 className="bg-stone-900 hover:bg-orange-800 text-white px-6 py-3 rounded-xl font-bold transition-all"
               >
-                {isEditing ? "Perbarui Buku" : "Simpan Buku"}
+                {isEditing ? "Update Book" : "Save Book"}
               </button>
             </div>
           </div>
