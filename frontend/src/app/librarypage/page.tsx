@@ -13,7 +13,6 @@ import {
   LogOut,
   LibraryBig,
   Bookmark,
-  Bell,
   Filter,
   X,
   Edit,
@@ -52,40 +51,6 @@ export default function LibraryPage() {
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null); // Menyimpan buku yang diklik
   const [showSuccessModal, setShowSuccessModal] = useState(false); // Modal Sukses Pinjam
-
-  // Notification handling
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  // Notification dummy data
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Book Available",
-      message:
-        "The book 'Atomic Habits' you were waiting for is now available.",
-      time: "2 hours ago",
-      unread: true,
-    },
-    {
-      id: 2,
-      title: "Reminder",
-      message: "Loan period for 'Dune' expires in 3 days.",
-      time: "5 hours ago",
-      unread: true,
-    },
-    {
-      id: 3,
-      title: "System Update",
-      message: "Libriofy now comes with an Edit Profile feature.",
-      time: "1 day ago",
-      unread: false,
-    },
-  ]);
-
-  // Logic to check for unread notifications
-  const hasUnread = notifications.some((n) => n.unread);
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
-  };
 
   // Fetch books from backend
   const fetchBooks = async () => {
@@ -349,69 +314,6 @@ export default function LibraryPage() {
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-4 pl-4 border-l border-stone-200">
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setIsNotificationOpen(!isNotificationOpen);
-                    setIsProfileOpen(false);
-                  }}
-                  className={`p-2.5 rounded-xl transition-all relative ${isNotificationOpen ? "text-orange-800 bg-orange-50" : "text-stone-400 hover:text-orange-800 hover:bg-orange-50"}`}
-                >
-                  <Bell className="w-6 h-6" />
-                  {hasUnread && (
-                    <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-                  )}
-                </button>
-
-                {/* NOTIFICATION DROPDOWN */}
-                {isNotificationOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsNotificationOpen(false)}
-                    ></div>
-                    <div className="absolute right-0 mt-4 w-80 bg-white rounded-[2rem] shadow-2xl border border-stone-100 py-6 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right overflow-hidden">
-                      <div className="px-6 mb-4 flex items-center justify-between">
-                        <h4 className="font-serif font-bold text-stone-900">
-                          Notifications
-                        </h4>
-                        {hasUnread && (
-                          <button
-                            onClick={markAllAsRead}
-                            className="text-[10px] font-black text-orange-800 hover:underline"
-                          >
-                            MARK ALL AS READ
-                          </button>
-                        )}
-                      </div>
-                      <div className="max-h-[300px] overflow-y-auto px-2">
-                        {notifications.map((n) => (
-                          <div
-                            key={n.id}
-                            className={`p-4 rounded-2xl flex gap-3 transition-colors ${n.unread ? "bg-orange-50/50" : "opacity-60"}`}
-                          >
-                            <div
-                              className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${n.unread ? "bg-orange-800" : "bg-transparent"}`}
-                            />
-                            <div>
-                              <p className="text-sm font-bold text-stone-900 leading-tight">
-                                {n.title}
-                              </p>
-                              <p className="text-xs text-stone-500 mt-1">
-                                {n.message}
-                              </p>
-                              <p className="text-[10px] text-stone-400 mt-2 font-medium">
-                                {n.time}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
               <div className="flex items-center gap-3 group">
                 <button
                   onClick={() => setIsProfileOpen(true)}
@@ -565,6 +467,12 @@ export default function LibraryPage() {
                     </>
                   )}
                 </div>
+                <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors leading-tight line-clamp-1">
+                  {book.title}
+                </h3>
+                <p className="text-xs text-stone-500 font-medium line-clamp-1">
+                  {book.author}
+                </p>
               </div>
             ))
           ) : (
