@@ -125,12 +125,6 @@ export default function LoanHistoryPage() {
           >
             Borrowed
           </button>
-          <button
-            onClick={() => setFilterStatus("RETURNED")}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "RETURNED" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
-          >
-            Returned
-          </button>
         </div>
 
         {/* History List */}
@@ -179,7 +173,7 @@ export default function LoanHistoryPage() {
                           <span className="flex items-center gap-1.5">
                             <AlertCircle className="w-3.5 h-3.5" /> Currently Borrowed
                           </span>
-                        ) : (
+                      ) : (
                           <span className="flex items-center gap-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Returned
                           </span>
