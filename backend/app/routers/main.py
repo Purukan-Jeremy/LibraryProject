@@ -1,17 +1,28 @@
-from fastapi import FastAPI, Depends, HTTPException, Form, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, Form, File, UploadFile, Request
 from sqlalchemy.orm import Session
-from . import models, schemas, database, crud
+from . import models, schemas, database, crud, auth_utils
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from typing import Optional
+from passlib.exc import UnknownHashError
 import os
 
 app = FastAPI()
 
+# Session backend (tidak mengubah alur frontend yang sudah ada)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET_KEY", "dev-session-secret-change-this"),
+    same_site="lax",
+    https_only=False,
+)
+
 # Izinkan Frontend mengakses API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -31,12 +42,15 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
     if existing:
         raise HTTPException(status_code=400, detail="Username atau Email sudah terdaftar")
 
+    # Hash password sebelum simpan
+    hashed_password = auth_utils.get_password_hash(data.password)
+
     # Simpan ke tbl_users dengan role_id 2 (User)
     new_user = models.User(
         fullname=data.fullname,
         username=data.username,
         email=data.email,
-        password=data.password, # Note: Idealnya di-hash
+        password=hashed_password,
         role_id=2 
     )
     db.add(new_user)
@@ -45,16 +59,43 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
 
 # --- ENDPOINT LOGIN ---
 @app.post("/api/login")
-def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
-    # 1. Cari user berdasarkan email
-    user = db.query(models.User).filter(models.User.email == data.email).first()
+def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(database.get_db)):
+    login_value = data.email.strip()
+
+    # 1. Cari user berdasarkan email (fallback ke username untuk kompatibilitas)
+    user = db.query(models.User).filter(models.User.email == login_value).first()
+    if not user:
+        user = db.query(models.User).filter(models.User.username == login_value).first()
     
-    # 2. Cek apakah user ada dan password cocok
-    if not user or user.password != data.password:
+    # 2. Cek user + verifikasi password.
+    #    Jika akun lama masih simpan plain password, izinkan sekali lalu migrasi ke hash.
+    if not user:
+        raise HTTPException(status_code=401, detail="Email atau Password salah")
+
+    is_valid_password = False
+    try:
+        is_valid_password = auth_utils.verify_password(data.password, user.password)
+    except (UnknownHashError, ValueError):
+        # Legacy fallback: password tersimpan plain text.
+        if data.password == user.password:
+            is_valid_password = True
+            user.password = auth_utils.get_password_hash(data.password)
+            db.commit()
+
+    if not is_valid_password:
         raise HTTPException(status_code=401, detail="Email atau Password salah")
     
     # 3. Ambil nama role (Librarian/User) dari tabel relasi
     role_name = user.role.role_name if user.role else "User"
+
+    # Simpan session tanpa mengubah response lama.
+    request.session["user"] = {
+        "id": user.id,
+        "fullname": user.fullname,
+        "username": user.username,
+        "email": user.email,
+        "role": role_name,
+    }
 
     return {
         "message": "Login berhasil",
@@ -65,6 +106,33 @@ def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
         }
     }
 
+@app.post("/api/change-password")
+def change_password(data: schemas.ChangePasswordRequest, db: Session = Depends(database.get_db)):
+    login_id = data.login_id.strip()
+    new_password = data.new_password.strip()
+    confirm_password = data.confirm_password.strip()
+
+    if not login_id:
+        raise HTTPException(status_code=400, detail="User tidak valid")
+
+    if not new_password:
+        raise HTTPException(status_code=400, detail="Password baru wajib diisi")
+
+    if new_password != confirm_password:
+        raise HTTPException(status_code=400, detail="Ulangi password harus sama")
+
+    user = db.query(models.User).filter(
+        (models.User.email == login_id) | (models.User.username == login_id)
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    user.password = auth_utils.get_password_hash(new_password)
+    db.commit()
+
+    return {"message": "Password berhasil diubah"}
+
 # ==============================
 # --- ENDPOINT TAMBAH BUKU ---
 # ==============================
@@ -72,22 +140,25 @@ def login_user(data: schemas.UserLogin, db: Session = Depends(database.get_db)):
 def create_book(
     isbn: str = Form(...),
     title: str = Form(...),
+    description: Optional[str] = Form(None),
     stock: int = Form(...),
     category_name: str = Form(...),
     publisher_name: str = Form(...),
     author_name: str = Form(...),
     file_pdf: Optional[UploadFile] = File(None),
+    cover_image: Optional[UploadFile] = File(None), # Added cover_image
     db: Session = Depends(database.get_db)
 ):
     book_data = {
         "isbn": isbn,
         "title": title,
+        "description": description,
         "stock": stock,
         "category_name": category_name,
         "publisher_name": publisher_name,
         "author_name": author_name,
     }
-    return crud.create_book(db=db, book_data=book_data, pdf_file=file_pdf)
+    return crud.create_book(db=db, book_data=book_data, pdf_file=file_pdf, cover_file=cover_image)
 
 
 # ==============================
@@ -105,22 +176,25 @@ def update_book(
     book_id: int,
     isbn: str = Form(...),
     title: str = Form(...),
+    description: Optional[str] = Form(None),
     stock: int = Form(...),
     category_name: str = Form(...),
     publisher_name: str = Form(...),
     author_name: str = Form(...),
     file_pdf: Optional[UploadFile] = File(None),
+    cover_image: Optional[UploadFile] = File(None), # Added cover_image
     db: Session = Depends(database.get_db)
 ):
     book_data = {
         "isbn": isbn,
         "title": title,
+        "description": description,
         "stock": stock,
         "category_name": category_name,
         "publisher_name": publisher_name,
         "author_name": author_name,
     }
-    return crud.update_book(db=db, book_id=book_id, book_data=book_data, pdf_file=file_pdf)
+    return crud.update_book(db=db, book_id=book_id, book_data=book_data, pdf_file=file_pdf, cover_file=cover_image)
 
 # ==============================
 # --- ENDPOINT HAPUS BUKU ---

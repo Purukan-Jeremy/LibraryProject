@@ -9,8 +9,13 @@ class UserCreate(BaseModel):
     role_id: int  # 1 untuk Librarian, 2 untuk User (sesuaikan dengan isi tbl_roles)
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
+
+class ChangePasswordRequest(BaseModel):
+    login_id: str
+    new_password: str
+    confirm_password: str
 
 class UserResponse(BaseModel):
     id: int
@@ -24,8 +29,10 @@ class UserResponse(BaseModel):
 class BookBase(BaseModel):
     isbn: str
     title: str
+    description: Optional[str] = None
     stock: Optional[int] = 0
     file_pdf: Optional[str] = None
+    cover_image: Optional[str] = None # Added cover_image
     category_name: Optional[str] = None
     publisher_name: Optional[str] = None
     author_name: Optional[str] = None

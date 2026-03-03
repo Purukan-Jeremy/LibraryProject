@@ -1,27 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   ChevronLeft,
-  ChevronRight,
-  Clock,
   CheckCircle2,
   AlertCircle,
   Filter,
   Search,
   BookOpen,
   Calendar,
+  User,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 
-export default function LoanHistoryPage() {
+export default function AdminLoanHistoryPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Dummy data for display simulation
+  // Data Dummy untuk Admin (Ditambahkan field 'borrower')
   const loanData = [
     {
       id: 1,
+      borrower: "Budi Santoso",
       title: "Laskar Pelangi",
       date: "10 Feb 2026",
       status: "RETURNED",
@@ -30,6 +31,7 @@ export default function LoanHistoryPage() {
     },
     {
       id: 2,
+      borrower: "Siti Aminah",
       title: "Filosofi Teras",
       date: "25 Feb 2026",
       status: "BORROWED",
@@ -38,6 +40,7 @@ export default function LoanHistoryPage() {
     },
     {
       id: 3,
+      borrower: "Andi Wijaya",
       title: "Bumi",
       date: "01 Mar 2026",
       status: "BORROWED",
@@ -46,44 +49,43 @@ export default function LoanHistoryPage() {
     },
   ];
 
-  // Filtering Logic
+  // Logika Filtering berdasarkan status, judul buku, atau nama peminjam
   const filteredLoans = loanData.filter((loan) => {
     const matchStatus = filterStatus === "ALL" || loan.status === filterStatus;
-    const matchSearch = loan.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchSearch =
+      loan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.borrower.toLowerCase().includes(searchTerm.toLowerCase());
     return matchStatus && matchSearch;
   });
 
   return (
     <div className="min-h-screen bg-[#fafaf9] p-8 md:p-12">
       <div className="max-w-5xl mx-auto">
-        {/* Back Button */}
         <Link
-          href="/librarypage"
+          href="/adminlibrarypage"
           className="inline-flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-colors mb-8 group"
         >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-medium text-sm">Back to Library</span>
+          <span className="font-medium text-sm">Kembali ke Perpustakaan</span>
         </Link>
 
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-serif font-bold text-stone-900 mb-2">
-              Loan History
+              Riwayat Peminjaman
             </h1>
             <p className="text-stone-500">
-              Monitor your reading activity and book status.
+              Pantau aktivitas membaca dan status buku Anda.
             </p>
           </div>
 
-          {/* Search & Quick Filter */}
+          {/* Pencarian & Filter Cepat */}
           <div className="flex gap-3">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <input
                 type="text"
-                placeholder="Search book title..."
+                placeholder="Cari judul buku..."
                 className="pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-2xl text-sm focus:ring-2 focus:ring-orange-800/10 outline-none w-64"
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -91,29 +93,28 @@ export default function LoanHistoryPage() {
           </div>
         </header>
 
-        {/* Status Filter Tabs */}
+        {/* Tab Filter Status */}
         <div className="flex gap-2 mb-8 bg-stone-100/50 p-1.5 rounded-2xl w-fit">
           <button
             onClick={() => setFilterStatus("ALL")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "ALL" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            All
+            Semua
           </button>
           <button
             onClick={() => setFilterStatus("BORROWED")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "BORROWED" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            Borrowed
+            Dipinjam
           </button>
           <button
             onClick={() => setFilterStatus("RETURNED")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "RETURNED" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            Returned
+            Dikembalikan
           </button>
         </div>
 
-        {/* History List */}
         <div className="grid gap-4">
           {filteredLoans.length > 0 ? (
             filteredLoans.map((loan) => (
@@ -134,14 +135,17 @@ export default function LoanHistoryPage() {
                       {loan.title}
                     </h3>
                     <div className="flex items-center gap-4 mt-1 text-sm text-stone-400">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" /> {loan.date}
+                      <span className="flex items-center gap-1.5 font-medium text-orange-700">
+                        <User className="w-3.5 h-3.5" /> {loan.borrower}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" /> Duration: 7 Days
+                        <Calendar className="w-3.5 h-3.5" /> {loan.date}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4" /> Quantity:{" "}
+                        <Clock className="w-4 h-4" /> Durasi: 7 Hari
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4" /> Jumlah:{" "}
                         {loan.quantity}
                       </span>
                     </div>
@@ -154,11 +158,11 @@ export default function LoanHistoryPage() {
                   >
                     {loan.status === "BORROWED" ? (
                       <span className="flex items-center gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5" /> Currently Borrowed
+                        <AlertCircle className="w-3.5 h-3.5" /> Sedang Dipinjam
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Returned
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Sudah Kembali
                       </span>
                     )}
                   </span>
@@ -171,7 +175,7 @@ export default function LoanHistoryPage() {
                 <Search className="text-stone-300 w-8 h-8" />
               </div>
               <p className="text-stone-400 font-medium">
-                No history found.
+                Tidak ada riwayat yang ditemukan.
               </p>
             </div>
           )}

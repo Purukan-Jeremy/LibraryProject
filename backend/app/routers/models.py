@@ -33,8 +33,10 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     isbn = Column(String(20), unique=True, nullable=False)
     title = Column(String(255), nullable=False)
+    description = Column(String(1000), nullable=True) # Added description
     stock = Column(Integer, default=0)
     file_pdf = Column(String(255))
+    cover_image = Column(String(255)) # Added cover_image
 
     category_name = Column(String(100), ForeignKey("tbl_categories.category_name"))
     publisher_name = Column(String(150), ForeignKey("tbl_publishers.publisher_name"))
