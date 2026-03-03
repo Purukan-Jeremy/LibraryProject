@@ -17,6 +17,18 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
     confirm_password: str
 
+class ForgotPasswordSendOTPRequest(BaseModel):
+    email: EmailStr
+
+class ForgotPasswordVerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+class ForgotPasswordResetRequest(BaseModel):
+    email: EmailStr
+    new_password: str
+    confirm_password: str
+
 class UserResponse(BaseModel):
     id: int
     username: str
