@@ -34,7 +34,9 @@ export default function LibrarianDashboard() {
     description: "",
     stock: 0,
     file_pdf: null as File | null,
+    cover_image: null as File | null,
     currentPdfName: "",
+    currentCoverName: "",
     category_name: "",
     publisher_name: "",
     author_name: "",
@@ -114,6 +116,7 @@ export default function LibrarianDashboard() {
         author: b.author_name || "Unknown",
         stock: b.stock,
         file_pdf: b.file_pdf,
+        cover_image: b.cover_image,
         category: b.category_name || "Unknown",
         publisher: b.publisher_name || "Unknown",
       }));
@@ -225,7 +228,9 @@ export default function LibrarianDashboard() {
       description: book.description || "",
       stock: book.stock || 0,
       file_pdf: null,
+      cover_image: null,
       currentPdfName: book.file_pdf || "",
+      currentCoverName: book.cover_image || "",
       category_name: book.category || "",
       publisher_name: book.publisher || "",
       author_name: book.author || "",
@@ -253,6 +258,9 @@ export default function LibrarianDashboard() {
       fd.append("author_name", formData.author_name);
       if (formData.file_pdf) {
         fd.append("file_pdf", formData.file_pdf);
+      }
+      if (formData.cover_image) {
+        fd.append("cover_image", formData.cover_image);
       }
 
       const response = await fetch(url, {
@@ -286,7 +294,9 @@ export default function LibrarianDashboard() {
         description: "",
         stock: 0,
         file_pdf: null,
+        cover_image: null,
         currentPdfName: "",
+        currentCoverName: "",
         category_name: "",
         publisher_name: "",
         author_name: "",
@@ -465,8 +475,21 @@ export default function LibrarianDashboard() {
                       className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors"
                     >
                       <td className="py-4 px-4">
-                        <div className="font-bold text-stone-900">
-                          {book.title}
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-14 bg-stone-100 rounded-lg overflow-hidden border border-stone-200 flex-shrink-0 flex items-center justify-center text-stone-400">
+                            {book.cover_image ? (
+                              <img 
+                                src={`http://127.0.0.1:8000/uploads/cover/${book.cover_image}`} 
+                                alt={book.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Book className="w-5 h-5 opacity-30" />
+                            )}
+                          </div>
+                          <div className="font-bold text-stone-900">
+                            {book.title}
+                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-4 text-sm text-stone-600">
@@ -709,6 +732,69 @@ export default function LibrarianDashboard() {
                     <span className="text-green-500">
                       ({(formData.file_pdf.size / 1024).toFixed(1)} KB)
                     </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Input Cover Image */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-stone-600 mb-2">
+                  Cover Image
+                  <span className="font-normal text-stone-400">
+                    (max. 5MB, only images)
+                  </span>
+                </label>
+
+                {/* Tampilkan cover lama saat mode edit */}
+                {isEditing && formData.currentCoverName && (
+                  <div className="flex items-center gap-4 mb-3 p-3 bg-stone-50 rounded-2xl border border-stone-100">
+                    <div className="w-16 h-20 rounded-lg overflow-hidden border border-stone-200 shadow-sm bg-white">
+                      <img
+                        src={`http://127.0.0.1:8000/uploads/cover/${formData.currentCoverName}`}
+                        alt="Current Cover"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-stone-500 mb-1">Current cover:</p>
+                      <p className="text-xs font-bold text-stone-700 truncate max-w-[200px]">{formData.currentCoverName}</p>
+                    </div>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                       if (file.size > 5 * 1024 * 1024) {
+                         alert("❌ Maximum image size is 5MB!");
+                         e.target.value = "";
+                         return;
+                       }
+                       setFormData({ ...formData, cover_image: file });
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-800/10 text-sm
+                    file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0
+                    file:bg-orange-800 file:text-white file:text-sm file:font-semibold file:cursor-pointer cursor-pointer"
+                />
+
+                {/* Preview cover yang baru dipilih */}
+                {formData.cover_image && (
+                  <div className="flex items-center gap-4 mt-3 p-3 bg-green-50 rounded-2xl border border-green-100">
+                    <div className="w-16 h-20 rounded-lg overflow-hidden border border-green-200 shadow-sm bg-white">
+                      <img
+                        src={URL.createObjectURL(formData.cover_image)}
+                        alt="New Cover"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-green-700 font-bold">{formData.cover_image.name}</p>
+                      <p className="text-[10px] text-green-600">{(formData.cover_image.size / 1024).toFixed(1)} KB</p>
+                    </div>
                   </div>
                 )}
               </div>

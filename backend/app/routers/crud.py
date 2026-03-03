@@ -7,6 +7,10 @@ import shutil, os, uuid
 UPLOAD_DIR = "uploads/pdf"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# ================= DIREKTORI UPLOAD COVER =================
+COVER_DIR = "uploads/cover"
+os.makedirs(COVER_DIR, exist_ok=True)
+
 
 # ================= HELPER: SIMPAN FILE PDF =================
 def save_pdf_file(file: UploadFile) -> str:
@@ -36,8 +40,27 @@ def save_pdf_file(file: UploadFile) -> str:
     return unique_filename
 
 
+# ================= HELPER: SIMPAN FILE COVER =================
+def save_cover_file(file: UploadFile) -> str:
+    """Simpan Cover Image ke disk. Return nama file unik."""
+    # Validasi content-type (opsional tapi disarankan)
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Hanya file gambar yang diperbolehkan untuk cover"
+        )
+
+    unique_filename = f"{uuid.uuid4()}_{file.filename}"
+    file_path = os.path.join(COVER_DIR, unique_filename)
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return unique_filename
+
+
 # ================= CREATE BOOK =================
-def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None):
+def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None, cover_file: UploadFile = None):
     # 1. Cari atau buat category
     category_name = book_data.get("category_name")
     if category_name:
@@ -77,13 +100,19 @@ def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None):
     if pdf_file:
         pdf_filename = save_pdf_file(pdf_file)
 
-    # 5. Simpan buku ke database
+    # 5. Simpan file Cover jika ada
+    cover_filename = None
+    if cover_file:
+        cover_filename = save_cover_file(cover_file)
+
+    # 6. Simpan buku ke database
     db_book = models.Book(
         isbn=book_data["isbn"],
         title=book_data["title"],
         description=book_data.get("description"),
         stock=book_data["stock"],
         file_pdf=pdf_filename,
+        cover_image=cover_filename, # Added cover_image
         category_name=db_category.category_name if category_name else None,
         author_name=db_author.author_name,
         publisher_name=db_publisher.publisher_name if publisher_name else None
@@ -106,6 +135,7 @@ def get_books(db: Session):
             "description": b.description,
             "stock": b.stock,
             "file_pdf": b.file_pdf,
+            "cover_image": b.cover_image, # Added cover_image
             "category_name": b.category_name,
             "publisher_name": b.publisher_name,
             "author_name": b.author_name
@@ -114,7 +144,7 @@ def get_books(db: Session):
 
 
 # ================= UPDATE BOOK =================
-def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile = None):
+def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile = None, cover_file: UploadFile = None):
     # 1. Cari buku
     db_book = db.query(models.Book).filter(models.Book.id == book_id).first()
     if not db_book:
@@ -173,7 +203,15 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
                 os.remove(old_path)
         db_book.file_pdf = save_pdf_file(pdf_file)
 
-    # 6. Update field lainnya
+    # 6. Handle Cover baru — hapus file lama jika ada
+    if cover_file:
+        if db_book.cover_image:
+            old_cover_path = os.path.join(COVER_DIR, db_book.cover_image)
+            if os.path.exists(old_cover_path):
+                os.remove(old_cover_path)
+        db_book.cover_image = save_cover_file(cover_file)
+
+    # 7. Update field lainnya
     db_book.isbn = book_data["isbn"]
     db_book.title = book_data["title"]
     db_book.description = book_data.get("description")
@@ -182,7 +220,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
     db.commit()
     db.refresh(db_book)
 
-    # 7. Bersihkan data lama jika tidak punya buku lain (Opsional, tapi konsisten)
+    # 8. Bersihkan data lama jika tidak punya buku lain (Opsional, tapi konsisten)
     # Bersihkan author lama
     if old_author_name and old_author_name != new_author_name:
         other_books = db.query(models.Book).filter(
@@ -230,6 +268,12 @@ def delete_book(db: Session, book_id: int):
         file_path = os.path.join(UPLOAD_DIR, db_book.file_pdf)
         if os.path.exists(file_path):
             os.remove(file_path)
+
+    # Hapus file Cover dari disk jika ada
+    if db_book.cover_image:
+        cover_path = os.path.join(COVER_DIR, db_book.cover_image)
+        if os.path.exists(cover_path):
+            os.remove(cover_path)
 
     db.delete(db_book)
     db.commit()

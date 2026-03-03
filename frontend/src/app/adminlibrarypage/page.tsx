@@ -53,6 +53,7 @@ export default function AdminLibraryPage() {
         publisher: b.publisher_name || "Unknown",
         isbn: b.isbn,
         stock: b.stock,
+        cover_image: b.cover_image,
         synopsis: b.description || "No description available.",
       }));
 
@@ -278,10 +279,20 @@ export default function AdminLibraryPage() {
                 onClick={() => setSelectedBook(book)}
               >
                 <div className="aspect-[3/4] bg-stone-200 rounded-[2rem] mb-4 overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300 relative">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                  <div className="flex items-center justify-center h-full text-stone-400 italic text-sm text-center px-4">
-                    Sampul {book.title}
-                  </div>
+                  {book.cover_image ? (
+                    <img 
+                      src={`http://127.0.0.1:8000/uploads/cover/${book.cover_image}`} 
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                      <div className="flex items-center justify-center h-full text-stone-400 italic text-sm text-center px-4">
+                        Sampul {book.title}
+                      </div>
+                    </>
+                  )}
                 </div>
                 <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors leading-tight">
                   {book.title}
@@ -479,16 +490,24 @@ export default function AdminLibraryPage() {
             {/* Kiri: Cover & Visual */}
             <div className="w-full md:w-2/5 bg-stone-100 p-8 md:p-12 flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-stone-200/50" />
-              <div className="relative w-48 aspect-[3/4] bg-white rounded-2xl shadow-xl flex items-center justify-center text-center p-4 z-0">
-                <div className="space-y-2">
-                  <Book className="w-12 h-12 text-orange-800 mx-auto opacity-50" />
-                  <p className="font-serif font-bold text-stone-800">
-                    {selectedBook.title}
-                  </p>
-                  <p className="text-xs text-stone-400">
-                    {selectedBook.author}
-                  </p>
-                </div>
+              <div className="relative w-48 aspect-[3/4] bg-white rounded-2xl shadow-xl flex items-center justify-center text-center overflow-hidden z-0">
+                {selectedBook.cover_image ? (
+                  <img 
+                    src={`http://127.0.0.1:8000/uploads/cover/${selectedBook.cover_image}`} 
+                    alt={selectedBook.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="p-4 space-y-2">
+                    <Book className="w-12 h-12 text-orange-800 mx-auto opacity-50" />
+                    <p className="font-serif font-bold text-stone-800">
+                      {selectedBook.title}
+                    </p>
+                    <p className="text-xs text-stone-400">
+                      {selectedBook.author}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
