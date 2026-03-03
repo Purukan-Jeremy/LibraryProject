@@ -36,6 +36,7 @@ class Book(Base):
     description = Column(String(1000), nullable=True) # Added description
     stock = Column(Integer, default=0)
     file_pdf = Column(String(255))
+    cover_image = Column(String(255)) # Added cover_image
 
     category_name = Column(String(100), ForeignKey("tbl_categories.category_name"))
     publisher_name = Column(String(150), ForeignKey("tbl_publishers.publisher_name"))

@@ -32,6 +32,7 @@ class BookBase(BaseModel):
     description: Optional[str] = None
     stock: Optional[int] = 0
     file_pdf: Optional[str] = None
+    cover_image: Optional[str] = None # Added cover_image
     category_name: Optional[str] = None
     publisher_name: Optional[str] = None
     author_name: Optional[str] = None

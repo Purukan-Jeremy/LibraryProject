@@ -146,6 +146,7 @@ def create_book(
     publisher_name: str = Form(...),
     author_name: str = Form(...),
     file_pdf: Optional[UploadFile] = File(None),
+    cover_image: Optional[UploadFile] = File(None), # Added cover_image
     db: Session = Depends(database.get_db)
 ):
     book_data = {
@@ -157,7 +158,7 @@ def create_book(
         "publisher_name": publisher_name,
         "author_name": author_name,
     }
-    return crud.create_book(db=db, book_data=book_data, pdf_file=file_pdf)
+    return crud.create_book(db=db, book_data=book_data, pdf_file=file_pdf, cover_file=cover_image)
 
 
 # ==============================
@@ -181,6 +182,7 @@ def update_book(
     publisher_name: str = Form(...),
     author_name: str = Form(...),
     file_pdf: Optional[UploadFile] = File(None),
+    cover_image: Optional[UploadFile] = File(None), # Added cover_image
     db: Session = Depends(database.get_db)
 ):
     book_data = {
@@ -192,7 +194,7 @@ def update_book(
         "publisher_name": publisher_name,
         "author_name": author_name,
     }
-    return crud.update_book(db=db, book_id=book_id, book_data=book_data, pdf_file=file_pdf)
+    return crud.update_book(db=db, book_id=book_id, book_data=book_data, pdf_file=file_pdf, cover_file=cover_image)
 
 # ==============================
 # --- ENDPOINT HAPUS BUKU ---
