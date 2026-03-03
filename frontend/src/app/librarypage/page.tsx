@@ -641,12 +641,6 @@ export default function LibraryPage() {
                       <Edit className="w-4 h-4" /> Edit Profile
                     </button>
                     <button
-                      onClick={() => setIsForgetPasswordOpen(true)}
-                      className="w-full py-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-2xl font-bold text-sm transition-all"
-                    >
-                      Forget Password
-                    </button>
-                    <button
                       onClick={handleLogout}
                       className="w-full py-4 text-red-500 font-bold text-sm hover:bg-red-50 rounded-2xl transition-all"
                     >

@@ -7,8 +7,63 @@ from starlette.middleware.sessions import SessionMiddleware
 from typing import Optional
 from passlib.exc import UnknownHashError
 import os
+import random
+import smtplib
+import hashlib
+from datetime import datetime, timedelta
+from email.message import EmailMessage
 
 app = FastAPI()
+
+
+def _now_utc():
+    return datetime.utcnow()
+
+
+def _hash_otp(email: str, otp_code: str) -> str:
+    otp_secret = os.getenv("RESET_OTP_SECRET", os.getenv("SESSION_SECRET_KEY", "dev-reset-secret"))
+    raw_value = f"{email.lower()}:{otp_code}:{otp_secret}"
+    return hashlib.sha256(raw_value.encode("utf-8")).hexdigest()
+
+
+def _send_reset_otp_email(recipient_email: str, otp_code: str):
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM_EMAIL", smtp_user or "no-reply@example.com")
+    smtp_use_tls = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+
+    if not smtp_host:
+        raise RuntimeError("SMTP_HOST belum dikonfigurasi")
+
+    message = EmailMessage()
+    message["Subject"] = "Kode Verifikasi Reset Password"
+    message["From"] = smtp_from
+    message["To"] = recipient_email
+    message.set_content(
+        f"Kode OTP reset password kamu adalah {otp_code}. "
+        "Kode ini berlaku selama 10 menit."
+    )
+
+    with smtplib.SMTP(smtp_host, smtp_port) as smtp:
+        if smtp_use_tls:
+            smtp.starttls()
+        if smtp_user and smtp_password:
+            smtp.login(smtp_user, smtp_password)
+        smtp.send_message(message)
+
+
+def _get_latest_active_reset_request(db: Session, email: str):
+    return (
+        db.query(models.PasswordResetRequest)
+        .filter(
+            models.PasswordResetRequest.email == email,
+            models.PasswordResetRequest.is_used.is_(False),
+        )
+        .order_by(models.PasswordResetRequest.created_at.desc())
+        .first()
+    )
 
 # Session backend (tidak mengubah alur frontend yang sudah ada)
 app.add_middleware(
@@ -132,6 +187,158 @@ def change_password(data: schemas.ChangePasswordRequest, db: Session = Depends(d
     db.commit()
 
     return {"message": "Password berhasil diubah"}
+
+
+@app.post("/api/forgot-password/send-otp")
+def send_forgot_password_otp(
+    data: schemas.ForgotPasswordSendOTPRequest,
+    db: Session = Depends(database.get_db)
+):
+    email = data.email.strip().lower()
+    user = db.query(models.User).filter(models.User.email == email).first()
+    generic_message = "Jika email terdaftar, kode verifikasi sudah dikirim"
+    if not user:
+        return {"message": generic_message}
+
+    max_requests = int(os.getenv("RESET_OTP_MAX_REQUESTS", "3"))
+    request_window_minutes = int(os.getenv("RESET_OTP_REQUEST_WINDOW_MINUTES", "15"))
+    window_start = _now_utc() - timedelta(minutes=request_window_minutes)
+    recent_requests_count = (
+        db.query(models.PasswordResetRequest)
+        .filter(
+            models.PasswordResetRequest.email == email,
+            models.PasswordResetRequest.created_at >= window_start,
+        )
+        .count()
+    )
+    if recent_requests_count >= max_requests:
+        raise HTTPException(
+            status_code=429,
+            detail="Terlalu banyak permintaan OTP. Coba lagi beberapa menit lagi.",
+        )
+
+    now = _now_utc()
+    db.query(models.PasswordResetRequest).filter(
+        models.PasswordResetRequest.email == email,
+        models.PasswordResetRequest.is_used.is_(False),
+    ).update(
+        {
+            models.PasswordResetRequest.is_used: True,
+            models.PasswordResetRequest.used_at: now,
+        },
+        synchronize_session=False,
+    )
+
+    otp_code = f"{random.randint(0, 999999):06d}"
+    expiry_minutes = int(os.getenv("RESET_OTP_EXPIRY_MINUTES", "10"))
+    reset_request = models.PasswordResetRequest(
+        user_id=user.id,
+        email=email,
+        otp_hash=_hash_otp(email, otp_code),
+        expires_at=now + timedelta(minutes=expiry_minutes),
+        attempt_count=0,
+        is_verified=False,
+        is_used=False,
+        created_at=now,
+    )
+    db.add(reset_request)
+
+    try:
+        _send_reset_otp_email(email, otp_code)
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Gagal mengirim OTP. Konfigurasi email belum valid. ({str(exc)})",
+        )
+
+    db.commit()
+    return {"message": generic_message}
+
+
+@app.post("/api/forgot-password/verify-otp")
+def verify_forgot_password_otp(
+    data: schemas.ForgotPasswordVerifyOTPRequest,
+    db: Session = Depends(database.get_db)
+):
+    email = data.email.strip().lower()
+    otp = data.otp.strip()
+    entry = _get_latest_active_reset_request(db, email)
+    if not entry:
+        raise HTTPException(status_code=400, detail="OTP belum diminta atau sudah kedaluwarsa")
+
+    now = _now_utc()
+    if now > entry.expires_at:
+        entry.is_used = True
+        entry.used_at = now
+        db.commit()
+        raise HTTPException(status_code=400, detail="OTP sudah kedaluwarsa")
+
+    max_attempts = int(os.getenv("RESET_OTP_MAX_VERIFY_ATTEMPTS", "5"))
+    if entry.attempt_count >= max_attempts:
+        entry.is_used = True
+        entry.used_at = now
+        db.commit()
+        raise HTTPException(status_code=400, detail="OTP sudah melebihi batas percobaan")
+
+    if _hash_otp(email, otp) != entry.otp_hash:
+        entry.attempt_count += 1
+        if entry.attempt_count >= max_attempts:
+            entry.is_used = True
+            entry.used_at = now
+        db.commit()
+        raise HTTPException(status_code=400, detail="Kode OTP tidak valid")
+
+    entry.is_verified = True
+    entry.verified_at = now
+    db.commit()
+    return {"message": "OTP valid"}
+
+
+@app.post("/api/forgot-password/reset")
+def reset_password_with_otp(
+    data: schemas.ForgotPasswordResetRequest,
+    db: Session = Depends(database.get_db)
+):
+    email = data.email.strip().lower()
+    new_password = data.new_password.strip()
+    confirm_password = data.confirm_password.strip()
+
+    if not new_password:
+        raise HTTPException(status_code=400, detail="Password baru wajib diisi")
+    if new_password != confirm_password:
+        raise HTTPException(status_code=400, detail="Ulangi password harus sama")
+
+    entry = _get_latest_active_reset_request(db, email)
+    if not entry:
+        raise HTTPException(status_code=400, detail="Sesi reset password tidak ditemukan")
+    now = _now_utc()
+    if now > entry.expires_at:
+        entry.is_used = True
+        entry.used_at = now
+        db.commit()
+        raise HTTPException(status_code=400, detail="Sesi reset password sudah kedaluwarsa")
+    if not entry.is_verified:
+        raise HTTPException(status_code=400, detail="OTP belum diverifikasi")
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    user.password = auth_utils.get_password_hash(new_password)
+    db.query(models.PasswordResetRequest).filter(
+        models.PasswordResetRequest.email == email,
+        models.PasswordResetRequest.is_used.is_(False),
+    ).update(
+        {
+            models.PasswordResetRequest.is_used: True,
+            models.PasswordResetRequest.used_at: now,
+        },
+        synchronize_session=False,
+    )
+    db.commit()
+
+    return {"message": "Password berhasil direset"}
 
 # ==============================
 # --- ENDPOINT TAMBAH BUKU ---

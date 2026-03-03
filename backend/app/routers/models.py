@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -61,3 +61,19 @@ class Author(Base):
     author_name = Column(String(150), unique=True, nullable=False) # Harus unique untuk jadi FK
 
     books = relationship("Book", back_populates="author")
+
+
+class PasswordResetRequest(Base):
+    __tablename__ = "password_reset_requests"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("tbl_users.id"), nullable=False, index=True)
+    email = Column(String(255), nullable=False, index=True)
+    otp_hash = Column(String(255), nullable=False)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    attempt_count = Column(Integer, nullable=False, default=0)
+    is_verified = Column(Boolean, nullable=False, default=False)
+    is_used = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False)
+    verified_at = Column(DateTime, nullable=True)
+    used_at = Column(DateTime, nullable=True)
