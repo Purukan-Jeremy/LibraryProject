@@ -17,43 +17,63 @@ import Link from "next/link";
 export default function LoanHistoryPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [loanData, setLoanData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy data for display simulation
-  const loanData = [
-    {
-      id: 1,
-      title: "Laskar Pelangi",
-      date: "10 Feb 2026",
-      status: "RETURNED",
-      quantity: 1,
-      color: "bg-green-50 text-green-700",
-    },
-    {
-      id: 2,
-      title: "Filosofi Teras",
-      date: "25 Feb 2026",
-      status: "BORROWED",
-      quantity: 1,
-      color: "bg-orange-50 text-orange-700",
-    },
-    {
-      id: 3,
-      title: "Bumi",
-      date: "01 Mar 2026",
-      status: "BORROWED",
-      quantity: 1,
-      color: "bg-orange-50 text-orange-700",
-    },
-  ];
+  // Fetch loans from backend
+  const fetchLoans = async () => {
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) return;
+    
+    const user = JSON.parse(savedUser);
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${user.id}/loans`);
+      const data = await response.json();
+      // Pastikan data yang di-set adalah array
+      setLoanData(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Gagal mengambil riwayat pinjaman:", error);
+      setLoanData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLoans();
+  }, []);
+
+  const handleReturnBook = async (loanId: number) => {
+    const confirmReturn = window.confirm("Are you sure you want to return this book?");
+    if (!confirmReturn) return;
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/loans/${loanId}/return`, {
+        method: "POST"
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to return book");
+      }
+
+      alert("Book returned successfully! It has been removed from your history.");
+      fetchLoans(); // Refresh list
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
 
   // Filtering Logic
-  const filteredLoans = loanData.filter((loan) => {
+  const filteredLoans = Array.isArray(loanData) ? loanData.filter((loan) => {
     const matchStatus = filterStatus === "ALL" || loan.status === filterStatus;
-    const matchSearch = loan.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    
+    // Cek apakah ada buku dalam loan yang judulnya cocok dengan search term
+    const matchSearch = loan.books?.some((book: any) => 
+      book.title.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || false;
+    
     return matchStatus && matchSearch;
-  });
+  }) : [];
 
   return (
     <div className="min-h-screen bg-[#fafaf9] p-8 md:p-12">
@@ -115,54 +135,68 @@ export default function LoanHistoryPage() {
 
         {/* History List */}
         <div className="grid gap-4">
-          {filteredLoans.length > 0 ? (
+          {loading ? (
+             <div className="text-center py-20 text-stone-400">Loading history...</div>
+          ) : filteredLoans.length > 0 ? (
             filteredLoans.map((loan) => (
               <div
                 key={loan.id}
-                className="group bg-white border border-stone-100 p-6 rounded-[2rem] flex flex-col md:flex-row md:items-center justify-between hover:shadow-xl hover:shadow-orange-900/5 transition-all duration-300"
+                className="group bg-white border border-stone-100 p-6 rounded-[2rem] flex flex-col gap-4 hover:shadow-xl hover:shadow-orange-900/5 transition-all duration-300"
               >
-                <div className="flex items-center gap-6">
-                  <div
-                    className={`p-4 rounded-2xl ${loan.status === "RETURNED" ? "bg-stone-50" : "bg-orange-50"}`}
-                  >
-                    <BookOpen
-                      className={`w-6 h-6 ${loan.status === "RETURNED" ? "text-stone-400" : "text-orange-800"}`}
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-stone-900">
-                      {loan.title}
-                    </h3>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-stone-400">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" /> {loan.date}
+                {loan.books.map((book: any, idx: number) => (
+                  <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div
+                        className={`p-4 rounded-2xl ${loan.status === "RETURNED" ? "bg-stone-50" : "bg-orange-50"}`}
+                      >
+                        <BookOpen
+                          className={`w-6 h-6 ${loan.status === "RETURNED" ? "text-stone-400" : "text-orange-800"}`}
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-stone-900">
+                          {book.title}
+                        </h3>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-stone-400">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4" /> {loan.loan_date}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-4 h-4" /> Duration: 7 Days
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4" /> Quantity: {book.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 md:mt-0 flex items-center gap-6">
+                      <span
+                        className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${loan.status === "BORROWED" ? "bg-orange-50 text-orange-700" : "bg-green-50 text-green-700"}`}
+                      >
+                        {loan.status === "BORROWED" ? (
+                          <span className="flex items-center gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5" /> Currently Borrowed
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Returned
+                          </span>
+                        )}
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" /> Duration: 7 Days
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4" /> Quantity:{" "}
-                        {loan.quantity}
-                      </span>
+
+                      {loan.status === "BORROWED" && (
+                        <button
+                          onClick={() => handleReturnBook(loan.id)}
+                          className="px-6 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-orange-800 transition-all active:scale-95 shadow-lg shadow-stone-900/10"
+                        >
+                          Return Book
+                        </button>
+                      )}
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-4 md:mt-0 flex items-center gap-6">
-                  <span
-                    className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${loan.color}`}
-                  >
-                    {loan.status === "BORROWED" ? (
-                      <span className="flex items-center gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5" /> Currently Borrowed
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Returned
-                      </span>
-                    )}
-                  </span>
-                </div>
+                ))}
               </div>
             ))
           ) : (

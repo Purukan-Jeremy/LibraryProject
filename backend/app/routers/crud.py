@@ -310,3 +310,105 @@ def delete_book(db: Session, book_id: int):
 def get_categories(db: Session):
     categories = db.query(models.Category).order_by(models.Category.category_name).all()
     return [{"id": c.id, "category_name": c.category_name} for c in categories]
+
+# ================= LOAN OPERATIONS =================
+
+from datetime import date
+
+def create_loan(db: Session, user_id: int, book_ids: list[int]):
+    # 1. Buat record Loan baru
+    db_loan = models.Loan(
+        user_id=user_id,
+        loan_date=date.today(),
+        status=models.LoanStatus.BORROWED
+    )
+    db.add(db_loan)
+    db.commit()
+    db.refresh(db_loan)
+
+    # 2. Buat LoanDetails dan kurangi stok buku
+    for book_id in book_ids:
+        db_book = db.query(models.Book).filter(models.Book.id == book_id).first()
+        if not db_book:
+            continue
+        
+        if db_book.stock <= 0:
+            raise HTTPException(status_code=400, detail=f"Buku {db_book.title} sedang habis stok")
+        
+        # Kurangi stok
+        db_book.stock -= 1
+        
+        # Tambah detail loan
+        db_detail = models.LoanDetail(
+            loan_id=db_loan.id,
+            book_id=book_id,
+            quantity=1
+        )
+        db.add(db_detail)
+    
+    db.commit()
+    db.refresh(db_loan)
+    return db_loan
+
+def get_user_loans(db: Session, user_id: int):
+    loans = db.query(models.Loan).filter(models.Loan.user_id == user_id).order_by(models.Loan.loan_date.desc()).all()
+    result = []
+    for loan in loans:
+        details = []
+        for d in loan.details:
+            details.append({
+                "book_id": d.book_id,
+                "title": d.book.title,
+                "author": d.book.author_name,
+                "quantity": d.quantity
+            })
+        
+        result.append({
+            "id": loan.id,
+            "loan_date": loan.loan_date.strftime("%d %b %Y"),
+            "status": loan.status.value,
+            "books": details
+        })
+    return result
+
+def get_all_loans(db: Session):
+    loans = db.query(models.Loan).order_by(models.Loan.loan_date.desc()).all()
+    result = []
+    for loan in loans:
+        details = []
+        for d in loan.details:
+            details.append({
+                "book_id": d.book_id,
+                "title": d.book.title,
+                "author": d.book.author_name,
+                "quantity": d.quantity
+            })
+        
+        result.append({
+            "id": loan.id,
+            "user_id": loan.user_id,
+            "username": loan.user.username,
+            "fullname": loan.user.fullname,
+            "email": loan.user.email,
+            "loan_date": loan.loan_date.strftime("%d %b %Y"),
+            "status": loan.status.value,
+            "books": details
+        })
+    return result
+
+def return_loan(db: Session, loan_id: int):
+    # 1. Cari loan
+    db_loan = db.query(models.Loan).filter(models.Loan.id == loan_id).first()
+    if not db_loan:
+        raise HTTPException(status_code=404, detail="Data pinjaman tidak ditemukan")
+
+    # 2. Kembalikan stok untuk setiap buku dalam loan ini
+    for detail in db_loan.details:
+        db_book = db.query(models.Book).filter(models.Book.id == detail.book_id).first()
+        if db_book:
+            db_book.stock += detail.quantity
+    
+    # 3. Hapus record loan (karena user minta dihapus dari history)
+    db.delete(db_loan)
+    db.commit()
+    return {"message": "Buku berhasil dikembalikan dan riwayat dihapus"}

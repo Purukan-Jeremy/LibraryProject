@@ -155,6 +155,7 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
     return {
         "message": "Login berhasil",
         "user": {
+            "id": user.id,
             "fullname": user.fullname,
             "username": user.username,
             "role": role_name
@@ -413,6 +414,27 @@ def delete_book(book_id: int, db: Session = Depends(database.get_db)):
 @app.get("/api/categories")
 def get_categories(db: Session = Depends(database.get_db)):
     return crud.get_categories(db)
+
+
+# ==============================
+# --- ENDPOINTS LOANS ---
+# ==============================
+
+@app.post("/api/loans")
+def create_loan(loan_data: schemas.LoanCreate, db: Session = Depends(database.get_db)):
+    return crud.create_loan(db=db, user_id=loan_data.user_id, book_ids=loan_data.book_ids)
+
+@app.get("/api/users/{user_id}/loans")
+def get_user_loans(user_id: int, db: Session = Depends(database.get_db)):
+    return crud.get_user_loans(db=db, user_id=user_id)
+
+@app.get("/api/admin/loans")
+def get_all_loans(db: Session = Depends(database.get_db)):
+    return crud.get_all_loans(db=db)
+
+@app.post("/api/loans/{loan_id}/return")
+def return_book(loan_id: int, db: Session = Depends(database.get_db)):
+    return crud.return_loan(db=db, loan_id=loan_id)
 
 # ==============================
 # --- ENDPOINT USER PROFILE + LOANS ---
