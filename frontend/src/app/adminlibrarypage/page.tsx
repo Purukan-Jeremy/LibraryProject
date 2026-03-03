@@ -298,7 +298,7 @@ export default function AdminLibraryPage() {
                   {book.title}
                 </h3>
                 <p className="text-xs text-stone-500 font-medium">
-                  {book.author} • {book.year}
+                  {book.author}
                 </p>
               </div>
             ))
@@ -541,14 +541,6 @@ export default function AdminLibraryPage() {
                     title={selectedBook.publisher}
                   >
                     {selectedBook.publisher}
-                  </p>
-                </div>
-                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
-                  <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3" /> Tahun Terbit
-                  </p>
-                  <p className="text-sm font-bold text-stone-800">
-                    {selectedBook.year}
                   </p>
                 </div>
                 <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
