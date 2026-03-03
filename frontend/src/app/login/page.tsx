@@ -91,7 +91,12 @@ export default function LoginPage() {
         password: password
       });
 
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.user.id,
+        fullname: response.data.user.fullname,
+        username: response.data.user.username,
+        role: response.data.user.role
+      }));
       setFailedLoginCount(0);
 
       alert(`Welcome back, ${response.data.user.fullname}!`);

@@ -148,14 +148,44 @@ export default function LibraryPage() {
   });
 
   // --- FUNGSI PINJAM BUKU ---
-  const handleBorrowBook = () => {
-    // 1. Tutup modal detail buku
-    setSelectedBook(null);
+  const handleBorrowBook = async () => {
+    if (!user || !selectedBook) {
+      console.log("Borrow failed: User or Book not selected", { user, selectedBook });
+      return;
+    }
 
-    // 2. Tampilkan modal sukses (sedikit delay agar transisi halus)
-    setTimeout(() => {
-      setShowSuccessModal(true);
-    }, 150);
+    const payload = {
+      user_id: user.id,
+      book_ids: [selectedBook.id]
+    };
+
+    console.log("Attempting to borrow book:", payload);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/loans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Gagal meminjam buku");
+      }
+
+      // 1. Tutup modal detail buku
+      setSelectedBook(null);
+
+      // 2. Tampilkan modal sukses (sedikit delay agar transisi halus)
+      setTimeout(() => {
+        setShowSuccessModal(true);
+      }, 150);
+
+      // 3. Refresh daftar buku (agar stok terupdate)
+      fetchBooks();
+    } catch (error: any) {
+      alert(error.message);
+    }
   };
 
   // Proteksi Halaman: Hanya user yang sudah login bisa masuk

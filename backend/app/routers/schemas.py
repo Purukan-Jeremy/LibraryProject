@@ -59,3 +59,28 @@ class Book(BookBase):
 
     class Config:
         from_attributes = True
+
+class LoanDetailBase(BaseModel):
+    book_id: int
+    quantity: int
+
+class LoanDetail(LoanDetailBase):
+    id: int
+    book: Book
+
+    class Config:
+        from_attributes = True
+
+class LoanCreate(BaseModel):
+    user_id: int
+    book_ids: list[int]
+
+class Loan(BaseModel):
+    id: int
+    user_id: int
+    loan_date: str
+    status: str
+    details: list[LoanDetail]
+
+    class Config:
+        from_attributes = True
