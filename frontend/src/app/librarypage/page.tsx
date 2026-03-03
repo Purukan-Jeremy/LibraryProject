@@ -53,14 +53,15 @@ export default function LibraryPage() {
   const [selectedBook, setSelectedBook] = useState<any>(null); // Menyimpan buku yang diklik
   const [showSuccessModal, setShowSuccessModal] = useState(false); // Modal Sukses Pinjam
 
-  //Handle Notifikasi
+  // Notification handling
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   // Notification dummy data
   const [notifications, setNotifications] = useState([
     {
       id: 1,
       title: "Book Available",
-      message: "The book 'Atomic Habits' you were waiting for is now available.",
+      message:
+        "The book 'Atomic Habits' you were waiting for is now available.",
       time: "2 hours ago",
       unread: true,
     },
@@ -535,19 +536,13 @@ export default function LibraryPage() {
                     </>
                   )}
                 </div>
-                <h3 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors leading-tight">
-                  {book.title}
-                </h3>
-                <p className="text-xs text-stone-500 font-medium">
-                  {book.author} • {book.year}
-                </p>
               </div>
             ))
           ) : (
             <div className="col-span-full py-20 text-center text-stone-400 italic">
               Books not found with those criteria.
             </div>
-          )}
+          ))}
         </div>
       </main>
 
