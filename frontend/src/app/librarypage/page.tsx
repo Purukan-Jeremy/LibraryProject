@@ -92,7 +92,7 @@ export default function LibraryPage() {
     try {
       const response = await fetch("http://127.0.0.1:8000/api/books");
       const data = await response.json();
-      
+
       const formattedBooks = data.map((b: any) => ({
         id: b.id,
         title: b.title,
@@ -105,7 +105,7 @@ export default function LibraryPage() {
         cover_image: b.cover_image,
         synopsis: b.description || "No description available.",
       }));
-      
+
       setAllBooks(formattedBooks);
     } catch (error) {
       console.error("Gagal mengambil buku:", error);
@@ -186,7 +186,9 @@ export default function LibraryPage() {
 
   const handleSaveProfile = () => {
     const nextUsername =
-      formData.username.trim() !== "" ? formData.username.trim() : user.username;
+      formData.username.trim() !== ""
+        ? formData.username.trim()
+        : user.username;
 
     const updatedUser = {
       ...user,
@@ -250,15 +252,18 @@ export default function LibraryPage() {
     try {
       setIsUpdatingPassword(true);
       const loginId = user.email || user.username;
-      const response = await fetch("http://127.0.0.1:8000/api/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          login_id: loginId,
-          new_password: newPassword,
-          confirm_password: repeatNewPassword,
-        }),
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/change-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            login_id: loginId,
+            new_password: newPassword,
+            confirm_password: repeatNewPassword,
+          }),
+        },
+      );
 
       const data = await response.json();
 
@@ -522,8 +527,8 @@ export default function LibraryPage() {
               >
                 <div className="aspect-[3/4] bg-stone-200 rounded-[2rem] mb-4 overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300 relative">
                   {book.cover_image ? (
-                    <img 
-                      src={`http://127.0.0.1:8000/uploads/cover/${book.cover_image}`} 
+                    <img
+                      src={`http://127.0.0.1:8000/uploads/cover/${book.cover_image}`}
                       alt={book.title}
                       className="w-full h-full object-cover"
                     />
@@ -542,7 +547,7 @@ export default function LibraryPage() {
             <div className="col-span-full py-20 text-center text-stone-400 italic">
               Books not found with those criteria.
             </div>
-          ))}
+          )}
         </div>
       </main>
 
@@ -814,8 +819,8 @@ export default function LibraryPage() {
               <div className="absolute inset-0 bg-stone-200/50" />
               <div className="relative w-48 aspect-[3/4] bg-white rounded-2xl shadow-xl flex items-center justify-center text-center overflow-hidden z-0">
                 {selectedBook.cover_image ? (
-                  <img 
-                    src={`http://127.0.0.1:8000/uploads/cover/${selectedBook.cover_image}`} 
+                  <img
+                    src={`http://127.0.0.1:8000/uploads/cover/${selectedBook.cover_image}`}
                     alt={selectedBook.title}
                     className="w-full h-full object-cover"
                   />

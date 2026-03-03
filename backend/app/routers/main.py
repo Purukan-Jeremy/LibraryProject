@@ -413,3 +413,36 @@ def delete_book(book_id: int, db: Session = Depends(database.get_db)):
 @app.get("/api/categories")
 def get_categories(db: Session = Depends(database.get_db)):
     return crud.get_categories(db)
+
+# ==============================
+# --- ENDPOINT USER PROFILE + LOANS ---
+# ==============================
+@app.get("/api/admin/users")
+def get_all_users_with_loans(db: Session = Depends(database.get_db)):
+    users = db.query(models.User).all()
+
+    result = []
+
+    for user in users:
+        loans = []
+
+        for loan in user.loans:
+            for detail in loan.details:
+                loans.append({
+                    "id": loan.id,
+                    "title": detail.book.title,
+                    "author": detail.book.author_name,
+                    "date": str(loan.loan_date),
+                    "status": loan.status.value if loan.status else None,
+                    "dueDate": str(loan.loan_date)  # sementara samakan dulu
+                })
+
+        result.append({
+            "id": user.id,
+            "fullname": user.fullname,
+            "username": user.username,
+            "email": user.email,
+            "loans": loans
+        })
+
+    return result

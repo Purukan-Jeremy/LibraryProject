@@ -1,6 +1,7 @@
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, String, ForeignKey
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, String, ForeignKey, Enum, Date
 from sqlalchemy.orm import relationship
 from .database import Base
+import enum
 
 class Role(Base):
     __tablename__ = "tbl_roles"
@@ -18,6 +19,7 @@ class User(Base):
     role_id = Column(Integer, ForeignKey("tbl_roles.id"))
     
     role = relationship("Role", back_populates="users")
+    loans = relationship("Loan", back_populates="user")
 
 class Publisher(Base):
     __tablename__ = "tbl_publishers"   # SESUAIKAN DENGAN DATABASE
@@ -77,3 +79,30 @@ class PasswordResetRequest(Base):
     created_at = Column(DateTime, nullable=False)
     verified_at = Column(DateTime, nullable=True)
     used_at = Column(DateTime, nullable=True)
+
+class LoanStatus(enum.Enum):
+    BORROWED = "BORROWED"
+    RETURNED = "RETURNED"
+
+
+class Loan(Base):
+    __tablename__ = "tbl_loans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("tbl_users.id"))
+    loan_date = Column(Date, nullable=False)
+    status = Column(Enum(LoanStatus), default=LoanStatus.BORROWED)
+
+    user = relationship("User", back_populates="loans")
+    details = relationship("LoanDetail", back_populates="loan")
+
+class LoanDetail(Base):
+    __tablename__ = "tbl_loan_details"
+
+    id = Column(Integer, primary_key=True, index=True)
+    loan_id = Column(Integer, ForeignKey("tbl_loans.id"))
+    book_id = Column(Integer, ForeignKey("tbl_books.id"))
+    quantity = Column(Integer, nullable=False)
+
+    loan = relationship("Loan", back_populates="details")
+    book = relationship("Book")

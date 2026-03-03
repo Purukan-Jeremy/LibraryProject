@@ -35,74 +35,25 @@ export default function AdminLoanHistoryPage() {
     role: "Librarian",
     username: "admin_utama",
   });
+  const [usersWithLoans, setUsersWithLoans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/admin/users");
+        const data = await res.json();
+        setUsersWithLoans(data);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   // Dummy Data for Users and their Loans
-  const usersWithLoans = [
-    {
-      id: 1,
-      fullname: "Budi Santoso",
-      username: "budi_s",
-      email: "budi@gmail.com",
-      loans: [
-        {
-          id: 101,
-          title: "Atomic Habits",
-          author: "James Clear",
-          date: "10 Feb 2026",
-          status: "RETURNED",
-          dueDate: "17 Feb 2026",
-        },
-        {
-          id: 102,
-          title: "Sapiens",
-          author: "Yuval Noah Harari",
-          date: "01 Mar 2026",
-          status: "BORROWED",
-          dueDate: "08 Mar 2026",
-        },
-      ],
-    },
-    {
-      id: 2,
-      fullname: "Siti Aminah",
-      username: "siti_amin",
-      email: "siti@yahoo.com",
-      loans: [
-        {
-          id: 103,
-          title: "Filosofi Teras",
-          author: "Henry Manampiring",
-          date: "25 Feb 2026",
-          status: "BORROWED",
-          dueDate: "04 Mar 2026",
-        },
-      ],
-    },
-    {
-      id: 3,
-      fullname: "Andi Wijaya",
-      username: "andi_w",
-      email: "andi.wijaya@outlook.com",
-      loans: [
-        {
-          id: 104,
-          title: "Bumi",
-          author: "Tere Liye",
-          date: "01 Mar 2026",
-          status: "BORROWED",
-          dueDate: "08 Mar 2026",
-        },
-        {
-          id: 105,
-          title: "Dune",
-          author: "Frank Herbert",
-          date: "15 Jan 2026",
-          status: "RETURNED",
-          dueDate: "22 Jan 2026",
-        },
-      ],
-    },
-  ];
 
   const filteredUsers = usersWithLoans.filter((u) => {
     const query = searchQuery.toLowerCase();
@@ -212,7 +163,11 @@ export default function AdminLoanHistoryPage() {
 
         {/* User List Accordion */}
         <div className="space-y-4">
-          {filteredUsers.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-20 text-stone-400 font-bold">
+              Loading data...
+            </div>
+          ) : filteredUsers.length > 0 ? (
             filteredUsers.map((user) => (
               <div
                 key={user.id}
@@ -228,7 +183,9 @@ export default function AdminLoanHistoryPage() {
                   className="w-full flex flex-col md:flex-row md:items-center justify-between p-6 md:p-8 text-left group"
                 >
                   <div className="flex items-center gap-6">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${expandedUser === user.id ? "bg-orange-800 text-white" : "bg-orange-50 text-orange-800"}`}>
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${expandedUser === user.id ? "bg-orange-800 text-white" : "bg-orange-50 text-orange-800"}`}
+                    >
                       <User className="w-7 h-7" />
                     </div>
                     <div>
@@ -249,10 +206,16 @@ export default function AdminLoanHistoryPage() {
 
                   <div className="flex items-center gap-6 mt-4 md:mt-0">
                     <div className="text-right hidden sm:block">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-stone-300 mb-1">Total Loans</p>
-                      <p className="text-sm font-bold text-stone-700">{user.loans.length} Books</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-stone-300 mb-1">
+                        Total Loans
+                      </p>
+                      <p className="text-sm font-bold text-stone-700">
+                        {user.loans.length} Books
+                      </p>
                     </div>
-                    <div className={`p-2 rounded-full transition-all ${expandedUser === user.id ? "bg-orange-50 text-orange-800 rotate-180" : "text-stone-300 group-hover:text-stone-400"}`}>
+                    <div
+                      className={`p-2 rounded-full transition-all ${expandedUser === user.id ? "bg-orange-50 text-orange-800 rotate-180" : "text-stone-300 group-hover:text-stone-400"}`}
+                    >
                       <ChevronDown className="w-6 h-6" />
                     </div>
                   </div>
@@ -261,7 +224,9 @@ export default function AdminLoanHistoryPage() {
                 {/* Accordion Content (Loan List) */}
                 <div
                   className={`transition-all duration-500 ease-in-out ${
-                    expandedUser === user.id ? "max-h-[1000px] border-t border-orange-50" : "max-h-0"
+                    expandedUser === user.id
+                      ? "max-h-[1000px] border-t border-orange-50"
+                      : "max-h-0"
                   }`}
                 >
                   <div className="p-8 bg-stone-50/30">
@@ -272,31 +237,45 @@ export default function AdminLoanHistoryPage() {
                           className="bg-white border border-stone-100 p-5 rounded-3xl flex flex-col md:flex-row md:items-center justify-between shadow-sm hover:shadow-md transition-all"
                         >
                           <div className="flex items-center gap-5">
-                            <div className={`p-3 rounded-2xl ${loan.status === "RETURNED" ? "bg-stone-50 text-stone-300" : "bg-orange-100 text-orange-800"}`}>
+                            <div
+                              className={`p-3 rounded-2xl ${loan.status === "RETURNED" ? "bg-stone-50 text-stone-300" : "bg-orange-100 text-orange-800"}`}
+                            >
                               <BookOpen className="w-5 h-5" />
                             </div>
                             <div>
-                              <h4 className="font-bold text-stone-800">{loan.title}</h4>
-                              <p className="text-xs text-stone-400 font-medium">{loan.author}</p>
+                              <h4 className="font-bold text-stone-800">
+                                {loan.title}
+                              </h4>
+                              <p className="text-xs text-stone-400 font-medium">
+                                {loan.author}
+                              </p>
                             </div>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-6 mt-4 md:mt-0">
                             <div className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-stone-300" />
-                                <div>
-                                    <p className="text-[9px] font-black uppercase text-stone-300 leading-none">Borrowed Date</p>
-                                    <p className="text-xs font-bold text-stone-600">{loan.date}</p>
-                                </div>
+                              <Calendar className="w-3.5 h-3.5 text-stone-300" />
+                              <div>
+                                <p className="text-[9px] font-black uppercase text-stone-300 leading-none">
+                                  Borrowed Date
+                                </p>
+                                <p className="text-xs font-bold text-stone-600">
+                                  {loan.date}
+                                </p>
+                              </div>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-stone-300" />
-                                <div>
-                                    <p className="text-[9px] font-black uppercase text-stone-300 leading-none">Due Date</p>
-                                    <p className="text-xs font-bold text-stone-600">{loan.dueDate}</p>
-                                </div>
+                              <Clock className="w-3.5 h-3.5 text-stone-300" />
+                              <div>
+                                <p className="text-[9px] font-black uppercase text-stone-300 leading-none">
+                                  Due Date
+                                </p>
+                                <p className="text-xs font-bold text-stone-600">
+                                  {loan.dueDate}
+                                </p>
+                              </div>
                             </div>
-                            
+
                             <span
                               className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
                                 loan.status === "RETURNED"
@@ -305,9 +284,15 @@ export default function AdminLoanHistoryPage() {
                               }`}
                             >
                               {loan.status === "RETURNED" ? (
-                                <><CheckCircle2 className="w-3.5 h-3.5" /> Returned</>
+                                <>
+                                  <CheckCircle2 className="w-3.5 h-3.5" />{" "}
+                                  Returned
+                                </>
                               ) : (
-                                <><AlertCircle className="w-3.5 h-3.5" /> Active Loan</>
+                                <>
+                                  <AlertCircle className="w-3.5 h-3.5" /> Active
+                                  Loan
+                                </>
                               )}
                             </span>
                           </div>
@@ -323,8 +308,10 @@ export default function AdminLoanHistoryPage() {
               <div className="bg-stone-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="text-stone-300 w-10 h-10" />
               </div>
-              <p className="text-stone-400 font-bold">No users found with that criteria.</p>
-              <button 
+              <p className="text-stone-400 font-bold">
+                No users found with that criteria.
+              </p>
+              <button
                 onClick={() => setSearchQuery("")}
                 className="mt-4 text-orange-800 text-sm font-bold hover:underline"
               >
@@ -369,35 +356,68 @@ export default function AdminLoanHistoryPage() {
               {!isEditingProfile ? (
                 <div className="animate-in slide-in-from-bottom-4 duration-300">
                   <div className="text-center mb-8">
-                    <h2 className="text-xl font-bold text-stone-900">{adminData.fullname}</h2>
-                    <p className="text-orange-800 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">{adminData.role}</p>
+                    <h2 className="text-xl font-bold text-stone-900">
+                      {adminData.fullname}
+                    </h2>
+                    <p className="text-orange-800 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">
+                      {adminData.role}
+                    </p>
                   </div>
                   <div className="space-y-3">
                     <div className="p-4 bg-stone-50 rounded-2xl flex items-center gap-4 border border-stone-100">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-stone-400 shadow-sm"><User className="w-4 h-4" /></div>
+                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-stone-400 shadow-sm">
+                        <User className="w-4 h-4" />
+                      </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase text-stone-400">Username</p>
-                        <p className="text-sm font-bold text-stone-700">{adminData.username}</p>
+                        <p className="text-[10px] font-black uppercase text-stone-400">
+                          Username
+                        </p>
+                        <p className="text-sm font-bold text-stone-700">
+                          {adminData.username}
+                        </p>
                       </div>
                     </div>
                     <div className="p-4 bg-stone-50 rounded-2xl flex items-center gap-4 border border-stone-100">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-stone-400 shadow-sm"><Mail className="w-4 h-4" /></div>
+                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-stone-400 shadow-sm">
+                        <Mail className="w-4 h-4" />
+                      </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase text-stone-400">Email</p>
-                        <p className="text-sm font-bold text-stone-700">{adminData.email}</p>
+                        <p className="text-[10px] font-black uppercase text-stone-400">
+                          Email
+                        </p>
+                        <p className="text-sm font-bold text-stone-700">
+                          {adminData.email}
+                        </p>
                       </div>
                     </div>
                   </div>
                   <div className="flex gap-3 mt-8">
-                    <button onClick={() => setIsEditingProfile(true)} className="flex-1 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold text-sm hover:bg-stone-200 transition-all flex items-center justify-center gap-2"><Edit className="w-4 h-4" /> Edit Profile</button>
-                    <button onClick={handleLogout} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all"><LogOut className="w-5 h-5" /></button>
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="flex-1 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold text-sm hover:bg-stone-200 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Edit className="w-4 h-4" /> Edit Profile
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all"
+                    >
+                      <LogOut className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               ) : (
                 /* Edit Profile Fields... (Disingkat untuk fokus ke UI utama) */
                 <div className="text-center py-4">
-                   <p className="text-sm text-stone-500 italic">Edit mode active...</p>
-                   <button onClick={() => setIsEditingProfile(false)} className="mt-4 px-6 py-2 bg-orange-800 text-white rounded-xl font-bold">Back</button>
+                  <p className="text-sm text-stone-500 italic">
+                    Edit mode active...
+                  </p>
+                  <button
+                    onClick={() => setIsEditingProfile(false)}
+                    className="mt-4 px-6 py-2 bg-orange-800 text-white rounded-xl font-bold"
+                  >
+                    Back
+                  </button>
                 </div>
               )}
             </div>
