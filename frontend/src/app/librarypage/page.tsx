@@ -309,12 +309,6 @@ export default function LibraryPage() {
               >
                 <Bookmark className="w-4 h-4" /> My Loans
               </Link>
-              <Link
-                href="/favorites"
-                className="hover:text-orange-800 transition-colors flex items-center gap-2"
-              >
-                <Heart className="w-4 h-4" /> Favorite Collection
-              </Link>
             </div>
           </div>
 
@@ -542,7 +536,7 @@ export default function LibraryPage() {
             <div className="col-span-full py-20 text-center text-stone-400 italic">
               Books not found with those criteria.
             </div>
-          ))}
+          )}
         </div>
       </main>
 
@@ -865,14 +859,6 @@ export default function LibraryPage() {
                     title={selectedBook.publisher}
                   >
                     {selectedBook.publisher}
-                  </p>
-                </div>
-                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
-                  <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3" /> Tahun Terbit
-                  </p>
-                  <p className="text-sm font-bold text-stone-800">
-                    {selectedBook.year}
                   </p>
                 </div>
                 <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">

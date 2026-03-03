@@ -12,6 +12,7 @@ import {
   User,
   LogOut,
   LibraryBig,
+  Bookmark,
   X,
   FileText,
   Mail,
@@ -372,6 +373,13 @@ export default function LibrarianDashboard() {
             >
               <Home className="w-4 h-4" />
               Home
+            </Link>
+            <Link
+              href="/adminhistory"
+              className="flex items-center gap-2 text-stone-500 hover:text-orange-800 transition-all"
+            >
+              <Bookmark className="w-4 h-4" />
+              History
             </Link>
           </div>
         </div>
