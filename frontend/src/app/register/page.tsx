@@ -10,7 +10,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
-    username: '', // State baru untuk username
+    username: '',
     email: '',
     password: '',
   });
@@ -31,7 +31,7 @@ export default function RegisterPage() {
     alert("Account successfully created! Please login.");
     router.push('/login');
   } catch (error: any) {
-    // Ini akan memunculkan pesan detail dari FastAPI (misal: "Username sudah ada")
+    //detail
     const detailError = error.response?.data?.detail;
     console.log("Full Error:", error.response?.data);
     alert(detailError || "Registration failed: Make sure the Backend is running");
@@ -77,7 +77,7 @@ export default function RegisterPage() {
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="Your Name"
-                  required // Tambahkan required untuk validasi dasar
+                  required
                   className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-orange-800/20 focus:border-orange-800 outline-none transition-all text-stone-800"
                 />
               </div>
@@ -128,7 +128,6 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="••••••••"
                   required
                   className="w-full pl-12 pr-12 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-orange-800/20 focus:border-orange-800 outline-none transition-all text-stone-800"
                 />
@@ -144,7 +143,7 @@ export default function RegisterPage() {
 
             {/* Tombol Register */}
             <button 
-              type="submit" // Pastikan type adalah submit
+              type="submit"
               className="w-full bg-orange-800 hover:bg-orange-900 text-stone-50 py-4 rounded-2xl font-bold shadow-lg shadow-orange-900/10 transition-all transform active:scale-[0.98] mt-4"
             >
               Register Now

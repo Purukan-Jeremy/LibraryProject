@@ -20,7 +20,6 @@ export default function LandingPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Mengambil data user dari localStorage saat komponen dimuat
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -28,7 +27,7 @@ export default function LandingPage() {
     }
   }, []);
 
-  // Close dropdown jika klik di luar
+  //dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -45,7 +44,7 @@ export default function LandingPage() {
     };
   }, []);
 
-  // Fungsi untuk keluar (Logout)
+  //Logout)
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
@@ -66,7 +65,6 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-6">
-          {/* Tampilan kondisional berdasarkan status login user */}
           {user ? (
             <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-full border border-stone-200 shadow-sm">
               <div className="flex flex-col text-right">
@@ -89,7 +87,6 @@ export default function LandingPage() {
               </button>
             </div>
           ) : (
-            /* Dropdown Container hanya muncul jika belum login */
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsOpen(!isOpen)}

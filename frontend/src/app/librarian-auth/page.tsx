@@ -10,13 +10,13 @@ export default function LibrarianAuthGate() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  // Password tunggal untuk akses Librarian
+  // Password tunggal
   const SECRET_GATE_CODE = "LIBRIOFY2026"; 
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
     if (accessCode === SECRET_GATE_CODE) {
-      // Simpan status di sessionStorage agar dashboard tahu user sudah login
+
       sessionStorage.setItem('isLibrarian', 'true');
       router.push('/dashboard');
     } else {
