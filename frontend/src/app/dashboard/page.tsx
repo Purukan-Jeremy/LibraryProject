@@ -28,6 +28,8 @@ function LibrarianDashboard() {
       const user = JSON.parse(savedUser);
       setAdminName(user.fullname || user.username || "Librarian");
     }
+    fetchBooks();
+    fetchCategories();
   }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +53,7 @@ function LibrarianDashboard() {
     const query = searchQuery.toLowerCase();
     return (
       book.title?.toLowerCase().includes(query) ||
-      book.author_name?.toLowerCase().includes(query)
+      book.author?.toLowerCase().includes(query)
     );
   });
 

@@ -16,6 +16,7 @@ export default function LibraryPage() {
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [categories, setCategories] = useState<string[]>(["All Categories"]);
 
   // Fetch books
   const fetchBooks = async () => {
@@ -42,12 +43,21 @@ export default function LibraryPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/categories");
+      const data = await response.json();
+      const catNames = data.map((c: any) => c.category_name);
+      setCategories(["All Categories", ...catNames]);
+    } catch (error) {
+      console.error("Gagal mengambil categories:", error);
+    }
+  };
+
   useEffect(() => {
     fetchBooks();
+    fetchCategories();
   }, []);
-
-  // Filter options
-  const categories = ["All Categories", "Fiction", "Science", "Education"];
 
 
   const [selectedCategory, setSelectedCategory] = useState("All Categories");

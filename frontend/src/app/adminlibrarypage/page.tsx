@@ -12,6 +12,7 @@ function AdminLibraryPage() {
   // --- STATE BUKU ---
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [categories, setCategories] = useState<string[]>(["Semua Kategori"]);
 
   // Fetch books
   const fetchBooks = async () => {
@@ -38,12 +39,21 @@ function AdminLibraryPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/categories");
+      const data = await response.json();
+      const catNames = data.map((c: any) => c.category_name);
+      setCategories(["Semua Kategori", ...catNames]);
+    } catch (error) {
+      console.error("Gagal mengambil categories:", error);
+    }
+  };
+
   React.useEffect(() => {
     fetchBooks();
+    fetchCategories();
   }, []);
-
-  // Filter options
-  const categories = ["Semua Kategori", "Fiksi", "Sains", "Edukasi"];
   
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Semua Kategori");
@@ -155,7 +165,7 @@ function AdminLibraryPage() {
                     />
                   ) : (
                     <>
-                      <div className="absolute inset-0 bg-grad  ient-to-t from-black/20 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                       <div className="flex items-center justify-center h-full text-stone-400 italic text-sm text-center px-4">
                         Sampul {book.title}
                       </div>
