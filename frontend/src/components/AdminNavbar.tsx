@@ -22,12 +22,19 @@ export default function AdminNavbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   
-  const [adminData, setAdminData] = useState({
-    fullname: "Admin Perpustakaan",
+  const [adminData, setAdminData] = useState<any>({
+    fullname: "Admin",
     email: "admin@library.com",
     role: "Librarian",
-    username: "admin_utama",
+    username: "admin",
   });
+
+  React.useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setAdminData(JSON.parse(savedUser));
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");

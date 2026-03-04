@@ -61,6 +61,14 @@ def save_cover_file(file: UploadFile) -> str:
 
 # ================= CREATE BOOK =================
 def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None, cover_file: UploadFile = None):
+    # 0. Cek apakah ISBN sudah terdaftar
+    existing_book = db.query(models.Book).filter(models.Book.isbn == book_data["isbn"]).first()
+    if existing_book:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Buku dengan ISBN {book_data['isbn']} sudah terdaftar"
+        )
+
     # 1. Cari atau buat category
     category_name = book_data.get("category_name")
     if category_name:

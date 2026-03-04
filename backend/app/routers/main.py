@@ -112,26 +112,55 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
     db.commit()
     return {"message": "Registrasi berhasil"}
 
+# --- ENDPOINT REGISTER LIBRARIAN ---
+@app.post("/api/librarian/register")
+def register_librarian(data: schemas.LibrarianCreate, db: Session = Depends(database.get_db)):
+    # 1. Cek access code
+    SECRET_GATE_CODE = "LIBRIOFY2026"
+    if data.access_code != SECRET_GATE_CODE:
+        raise HTTPException(status_code=403, detail="Invalid master access code")
+
+    # 2. Cek apakah email/username sudah ada
+    existing = db.query(models.User).filter(
+        (models.User.email == data.email) | (models.User.username == data.username)
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Username atau Email sudah terdaftar")
+
+    # 3. Hash password
+    hashed_password = auth_utils.get_password_hash(data.password)
+
+    # 4. Simpan ke tbl_users dengan role_id 1 (Librarian)
+    new_librarian = models.User(
+        fullname=data.fullname,
+        username=data.username,
+        email=data.email,
+        password=hashed_password,
+        role_id=1 
+    )
+    db.add(new_librarian)
+    db.commit()
+    return {"message": "Librarian account successfully created"}
+
 # --- ENDPOINT LOGIN ---
 @app.post("/api/login")
 def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(database.get_db)):
     login_value = data.email.strip()
 
-    # 1. Cari user berdasarkan email (fallback ke username untuk kompatibilitas)
+    # 1. Cari user berdasarkan email (fallback ke username)
     user = db.query(models.User).filter(models.User.email == login_value).first()
     if not user:
         user = db.query(models.User).filter(models.User.username == login_value).first()
     
-    # 2. Cek user + verifikasi password.
-    #    Jika akun lama masih simpan plain password, izinkan sekali lalu migrasi ke hash.
     if not user:
         raise HTTPException(status_code=401, detail="Email atau Password salah")
 
+    # 2. Verifikasi password
     is_valid_password = False
     try:
         is_valid_password = auth_utils.verify_password(data.password, user.password)
     except (UnknownHashError, ValueError):
-        # Legacy fallback: password tersimpan plain text.
         if data.password == user.password:
             is_valid_password = True
             user.password = auth_utils.get_password_hash(data.password)
@@ -140,17 +169,8 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
     if not is_valid_password:
         raise HTTPException(status_code=401, detail="Email atau Password salah")
     
-    # 3. Ambil nama role (Librarian/User) dari tabel relasi
+    # 3. Cek role
     role_name = user.role.role_name if user.role else "User"
-
-    # Simpan session tanpa mengubah response lama.
-    request.session["user"] = {
-        "id": user.id,
-        "fullname": user.fullname,
-        "username": user.username,
-        "email": user.email,
-        "role": role_name,
-    }
 
     return {
         "message": "Login berhasil",
@@ -159,6 +179,46 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
             "fullname": user.fullname,
             "username": user.username,
             "role": role_name
+        }
+    }
+
+# --- ENDPOINT LOGIN LIBRARIAN ---
+@app.post("/api/librarian/login")
+def login_librarian(data: schemas.LibrarianLogin, db: Session = Depends(database.get_db)):
+    # 1. Cek access code
+    SECRET_GATE_CODE = "LIBRIOFY2026"
+    if data.access_code != SECRET_GATE_CODE:
+        raise HTTPException(status_code=403, detail="Invalid master access code")
+
+    # 2. Cari user (harus ada dan punya role Librarian / role_id 1)
+    login_value = data.email.strip()
+    user = db.query(models.User).filter(
+        (models.User.email == login_value) | (models.User.username == login_value)
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Librarian account not found")
+
+    # 3. Verifikasi Password
+    try:
+        is_valid = auth_utils.verify_password(data.password, user.password)
+    except:
+        is_valid = (data.password == user.password)
+
+    if not is_valid:
+        raise HTTPException(status_code=401, detail="Invalid password")
+
+    # 4. Verifikasi Role (Pastikan Librarian)
+    if user.role_id != 1:
+        raise HTTPException(status_code=403, detail="Account is not registered as a Librarian")
+
+    return {
+        "message": "Librarian login successful",
+        "user": {
+            "id": user.id,
+            "fullname": user.fullname,
+            "username": user.username,
+            "role": "Librarian"
         }
     }
 

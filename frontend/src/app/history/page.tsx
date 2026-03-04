@@ -115,13 +115,7 @@ export default function LoanHistoryPage() {
             onClick={() => setFilterStatus("ALL")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "ALL" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            All
-          </button>
-          <button
-            onClick={() => setFilterStatus("BORROWED")}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "BORROWED" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
-          >
-            Borrowed
+            All History
           </button>
         </div>
 

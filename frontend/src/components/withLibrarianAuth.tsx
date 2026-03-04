@@ -12,12 +12,17 @@ export default function withLibrarianAuth(Component: React.ComponentType<any>) {
 
     useEffect(() => {
       const checkAuth = () => {
-        const isLibrarian = sessionStorage.getItem("isLibrarian");
-        if (isLibrarian === "true") {
-          setIsAuthorized(true);
-        } else {
-          setIsAuthorized(false);
+        const isLibrarianFlag = sessionStorage.getItem("isLibrarian");
+        const savedUser = localStorage.getItem("user");
+        
+        if (isLibrarianFlag === "true" && savedUser) {
+          const user = JSON.parse(savedUser);
+          if (user.role === "Librarian") {
+            setIsAuthorized(true);
+            return;
+          }
         }
+        setIsAuthorized(false);
       };
 
       checkAuth();

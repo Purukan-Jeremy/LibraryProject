@@ -9,6 +9,7 @@ import {
   Trash2,
   FileText,
   ChevronDown,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AdminNavbar from "@/components/AdminNavbar";
@@ -19,6 +20,15 @@ function LibrarianDashboard() {
   const [books, setBooks] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const [adminName, setAdminName] = useState("Librarian");
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      setAdminName(user.fullname || user.username || "Librarian");
+    }
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editBookId, setEditBookId] = useState<number | null>(null);
@@ -239,7 +249,7 @@ function LibrarianDashboard() {
       });
     } catch (error) {
       console.error(error);
-      alert("Could not connect to server");
+      showToast("Could not connect to server", "error");
     }
   };
 
@@ -254,7 +264,7 @@ function LibrarianDashboard() {
 
       if (!response.ok) {
         const result = await response.json();
-        alert(result.detail || "Failed to delete book");
+        showToast(result.detail || "Failed to delete book", "error");
         return;
       }
 
@@ -277,7 +287,7 @@ function LibrarianDashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div>
             <h1 className="text-3xl font-serif font-bold text-stone-900">
-              Welcome, Librarian
+              Welcome, {adminName}
             </h1>
             <p className="text-stone-500">
               Monitor and manage your library's book collection here.

@@ -184,26 +184,9 @@ export default function LibraryPage() {
                         ))}
                       </select>
                     </div>
-
-                    <div className="mb-4">
-                      <label className="text-[10px] font-black uppercase text-stone-400 ml-1 mb-2 block">
-                        Release Year
-                      </label>
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        className="w-full p-3 bg-stone-50 border border-stone-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-800/10"
-                      >
-                        {yearOptions.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-
                     <button
                       onClick={() => {
                         setSelectedCategory("All Categories");
-                        setSelectedYear("All Years");
                       }}
                       className="w-full py-2 text-[10px] font-bold text-orange-800 uppercase hover:bg-orange-50 rounded-lg transition-colors"
                     >
