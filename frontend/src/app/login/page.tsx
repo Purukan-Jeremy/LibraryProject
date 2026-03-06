@@ -352,7 +352,7 @@ export default function LoginPage() {
                     type="email"
                     value={forgotEmail}
                     disabled
-                    className="mt-2 w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-2xl text-stone-500"
+                    className="mt-2 w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-2xl text-stone-50"
                   />
                 </div>
 

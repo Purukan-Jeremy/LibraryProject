@@ -20,7 +20,6 @@ export default function LandingPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Mengambil data user dari localStorage saat komponen dimuat
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -28,7 +27,7 @@ export default function LandingPage() {
     }
   }, []);
 
-  // Close dropdown jika klik di luar
+  //dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -45,7 +44,7 @@ export default function LandingPage() {
     };
   }, []);
 
-  // Fungsi untuk keluar (Logout)
+  //Logout)
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
@@ -66,7 +65,6 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-6">
-          {/* Tampilan kondisional berdasarkan status login user */}
           {user ? (
             <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-full border border-stone-200 shadow-sm">
               <div className="flex flex-col text-right">
@@ -89,7 +87,6 @@ export default function LandingPage() {
               </button>
             </div>
           ) : (
-            /* Dropdown Container hanya muncul jika belum login */
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -175,11 +172,9 @@ export default function LandingPage() {
 
           <div className="relative">
             <div className="aspect-[4/5] bg-stone-200 rounded-[3rem] overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
-              <div className="absolute inset-0 bg-gradient-to-tr from-orange-900/20 to-transparent" />
-              <div className="flex items-center justify-center h-full text-stone-400 font-serif italic text-xl">
-                Warm Vibe
-              </div>
-            </div>
+              <img src="/books.jpg" alt="Cozy Books" className="w-full h-full object-cover"/>
+            <div className="absolute inset-0 bg-gradient-to-tr from-orange-900/20 to-transparent" />
+          </div>
 
             <div className="absolute -bottom-6 -left-10 bg-white p-6 rounded-2xl shadow-xl flex items-center gap-4 border border-stone-100">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700">

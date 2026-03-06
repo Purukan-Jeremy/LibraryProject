@@ -12,6 +12,18 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class LibrarianLogin(BaseModel):
+    email: str
+    password: str
+    access_code: str
+
+class LibrarianCreate(BaseModel):
+    fullname: str
+    username: str
+    email: EmailStr
+    password: str
+    access_code: str
+
 class ChangePasswordRequest(BaseModel):
     login_id: str
     new_password: str

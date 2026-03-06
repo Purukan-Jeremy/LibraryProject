@@ -20,7 +20,7 @@ export default function LoanHistoryPage() {
   const [loanData, setLoanData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch loans from backend
+  // Fetch loans
   const fetchLoans = async () => {
     const savedUser = localStorage.getItem("user");
     if (!savedUser) return;
@@ -29,7 +29,6 @@ export default function LoanHistoryPage() {
     try {
       const response = await fetch(`http://127.0.0.1:8000/api/users/${user.id}/loans`);
       const data = await response.json();
-      // Pastikan data yang di-set adalah array
       setLoanData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Gagal mengambil riwayat pinjaman:", error);
@@ -57,17 +56,16 @@ export default function LoanHistoryPage() {
       }
 
       alert("Book returned successfully! It has been removed from your history.");
-      fetchLoans(); // Refresh list
+      fetchLoans();
     } catch (error: any) {
       alert(error.message);
     }
   };
 
-  // Filtering Logic
+  // Filtering
   const filteredLoans = Array.isArray(loanData) ? loanData.filter((loan) => {
     const matchStatus = filterStatus === "ALL" || loan.status === filterStatus;
     
-    // Cek apakah ada buku dalam loan yang judulnya cocok dengan search term
     const matchSearch = loan.books?.some((book: any) => 
       book.title.toLowerCase().includes(searchTerm.toLowerCase())
     ) || false;
@@ -117,13 +115,7 @@ export default function LoanHistoryPage() {
             onClick={() => setFilterStatus("ALL")}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "ALL" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
           >
-            All
-          </button>
-          <button
-            onClick={() => setFilterStatus("BORROWED")}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filterStatus === "BORROWED" ? "bg-white text-orange-800 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
-          >
-            Borrowed
+            All History
           </button>
         </div>
 
