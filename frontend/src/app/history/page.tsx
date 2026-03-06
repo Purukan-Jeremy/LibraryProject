@@ -13,6 +13,7 @@ import {
   Calendar,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function LoanHistoryPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
@@ -31,7 +32,7 @@ export default function LoanHistoryPage() {
       const data = await response.json();
       setLoanData(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Gagal mengambil riwayat pinjaman:", error);
+      console.error("Failed to fetch loan history:", error);
       setLoanData([]);
     } finally {
       setLoading(false);
@@ -55,10 +56,10 @@ export default function LoanHistoryPage() {
         throw new Error("Failed to return book");
       }
 
-      alert("Book returned successfully! It has been removed from your history.");
+      toast.success("Book returned successfully! It has been removed from your history.");
       fetchLoans();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 

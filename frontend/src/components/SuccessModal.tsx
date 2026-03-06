@@ -13,7 +13,7 @@ export default function SuccessModal({ showSuccessModal, setShowSuccessModal }: 
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      {/* Backdrop Transparan */}
+      {/* Transparent Backdrop */}
       <div
         className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
         onClick={() => setShowSuccessModal(false)}
@@ -24,16 +24,16 @@ export default function SuccessModal({ showSuccessModal, setShowSuccessModal }: 
           <CheckCircle2 className="w-10 h-10 text-green-600" />
         </div>
         <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">
-          Berhasil Dipinjam!
+          Successfully Borrowed!
         </h3>
         <p className="text-stone-500 text-sm mb-8 leading-relaxed">
-          Buku telah berhasil ditambahkan ke daftar pinjaman Anda. Selamat membaca!
+          The book has been successfully added to your loan list. Happy reading!
         </p>
         <button
           onClick={() => setShowSuccessModal(false)}
           className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-orange-800 transition-all shadow-lg active:scale-95"
         >
-          Oke, Mengerti
+          Okay, Understood
         </button>
       </div>
     </div>

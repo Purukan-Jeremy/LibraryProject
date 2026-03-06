@@ -35,15 +35,15 @@ def _send_reset_otp_email(recipient_email: str, otp_code: str):
     smtp_use_tls = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
 
     if not smtp_host:
-        raise RuntimeError("SMTP_HOST belum dikonfigurasi")
+        raise RuntimeError("SMTP_HOST is not configured")
 
     message = EmailMessage()
-    message["Subject"] = "Kode Verifikasi Reset Password"
+    message["Subject"] = "Password Reset Verification Code"
     message["From"] = smtp_from
     message["To"] = recipient_email
     message.set_content(
-        f"Kode OTP reset password kamu adalah {otp_code}. "
-        "Kode ini berlaku selama 10 menit."
+        f"Your password reset OTP code is {otp_code}. "
+        "This code is valid for 10 minutes."
     )
 
     with smtplib.SMTP(smtp_host, smtp_port) as smtp:
@@ -65,7 +65,7 @@ def _get_latest_active_reset_request(db: Session, email: str):
         .first()
     )
 
-# Session backend (tidak mengubah alur frontend yang sudah ada)
+# Session backend (doesn't change existing frontend flow)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "dev-session-secret-change-this"),
@@ -73,7 +73,7 @@ app.add_middleware(
     https_only=False,
 )
 
-# Izinkan Frontend mengakses API
+# Allow Frontend to access API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -82,25 +82,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===== STATIC FILES — agar PDF bisa diakses via URL =====
+# ===== STATIC FILES — so PDFs can be accessed via URL =====
 os.makedirs("uploads/pdf", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# --- ENDPOINT REGISTER ---
+# --- REGISTER ENDPOINT ---
 @app.post("/api/register")
 def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_db)):
-    # Cek apakah email/username sudah ada
+    # Check if email/username already exists
     existing = db.query(models.User).filter(
         (models.User.email == data.email) | (models.User.username == data.username)
     ).first()
     
     if existing:
-        raise HTTPException(status_code=400, detail="Username atau Email sudah terdaftar")
+        raise HTTPException(status_code=400, detail="Username or Email already registered")
 
-    # Hash password sebelum simpan
+    # Hash password before saving
     hashed_password = auth_utils.get_password_hash(data.password)
 
-    # Simpan ke tbl_users dengan role_id 2 (User)
+    # Save to tbl_users with role_id 2 (User)
     new_user = models.User(
         fullname=data.fullname,
         username=data.username,
@@ -110,28 +110,28 @@ def register_user(data: schemas.UserCreate, db: Session = Depends(database.get_d
     )
     db.add(new_user)
     db.commit()
-    return {"message": "Registrasi berhasil"}
+    return {"message": "Registration successful"}
 
-# --- ENDPOINT REGISTER LIBRARIAN ---
+# --- LIBRARIAN REGISTER ENDPOINT ---
 @app.post("/api/librarian/register")
 def register_librarian(data: schemas.LibrarianCreate, db: Session = Depends(database.get_db)):
-    # 1. Cek access code
+    # 1. Check access code
     SECRET_GATE_CODE = "LIBRIOFY2026"
     if data.access_code != SECRET_GATE_CODE:
         raise HTTPException(status_code=403, detail="Invalid master access code")
 
-    # 2. Cek apakah email/username sudah ada
+    # 2. Check if email/username already exists
     existing = db.query(models.User).filter(
         (models.User.email == data.email) | (models.User.username == data.username)
     ).first()
     
     if existing:
-        raise HTTPException(status_code=400, detail="Username atau Email sudah terdaftar")
+        raise HTTPException(status_code=400, detail="Username or Email already registered")
 
     # 3. Hash password
     hashed_password = auth_utils.get_password_hash(data.password)
 
-    # 4. Simpan ke tbl_users dengan role_id 1 (Librarian)
+    # 4. Save to tbl_users with role_id 1 (Librarian)
     new_librarian = models.User(
         fullname=data.fullname,
         username=data.username,
@@ -143,20 +143,20 @@ def register_librarian(data: schemas.LibrarianCreate, db: Session = Depends(data
     db.commit()
     return {"message": "Librarian account successfully created"}
 
-# --- ENDPOINT LOGIN ---
+# --- LOGIN ENDPOINT ---
 @app.post("/api/login")
 def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(database.get_db)):
     login_value = data.email.strip()
 
-    # 1. Cari user berdasarkan email (fallback ke username)
+    # 1. Find user by email (fallback to username)
     user = db.query(models.User).filter(models.User.email == login_value).first()
     if not user:
         user = db.query(models.User).filter(models.User.username == login_value).first()
     
     if not user:
-        raise HTTPException(status_code=401, detail="Email atau Password salah")
+        raise HTTPException(status_code=401, detail="Invalid Email or Password")
 
-    # 2. Verifikasi password
+    # 2. Verify password
     is_valid_password = False
     try:
         is_valid_password = auth_utils.verify_password(data.password, user.password)
@@ -167,13 +167,13 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
             db.commit()
 
     if not is_valid_password:
-        raise HTTPException(status_code=401, detail="Email atau Password salah")
+        raise HTTPException(status_code=401, detail="Invalid Email or Password")
     
-    # 3. Cek role
+    # 3. Check role
     role_name = user.role.role_name if user.role else "User"
 
     return {
-        "message": "Login berhasil",
+        "message": "Login successful",
         "user": {
             "id": user.id,
             "fullname": user.fullname,
@@ -182,15 +182,15 @@ def login_user(data: schemas.UserLogin, request: Request, db: Session = Depends(
         }
     }
 
-# --- ENDPOINT LOGIN LIBRARIAN ---
+# --- LIBRARIAN LOGIN ENDPOINT ---
 @app.post("/api/librarian/login")
 def login_librarian(data: schemas.LibrarianLogin, db: Session = Depends(database.get_db)):
-    # 1. Cek access code
+    # 1. Check access code
     SECRET_GATE_CODE = "LIBRIOFY2026"
     if data.access_code != SECRET_GATE_CODE:
         raise HTTPException(status_code=403, detail="Invalid master access code")
 
-    # 2. Cari user (harus ada dan punya role Librarian / role_id 1)
+    # 2. Find user (must exist and have role Librarian / role_id 1)
     login_value = data.email.strip()
     user = db.query(models.User).filter(
         (models.User.email == login_value) | (models.User.username == login_value)
@@ -199,7 +199,7 @@ def login_librarian(data: schemas.LibrarianLogin, db: Session = Depends(database
     if not user:
         raise HTTPException(status_code=401, detail="Librarian account not found")
 
-    # 3. Verifikasi Password
+    # 3. Verify Password
     try:
         is_valid = auth_utils.verify_password(data.password, user.password)
     except:
@@ -208,7 +208,7 @@ def login_librarian(data: schemas.LibrarianLogin, db: Session = Depends(database
     if not is_valid:
         raise HTTPException(status_code=401, detail="Invalid password")
 
-    # 4. Verifikasi Role (Pastikan Librarian)
+    # 4. Verify Role (Ensure Librarian)
     if user.role_id != 1:
         raise HTTPException(status_code=403, detail="Account is not registered as a Librarian")
 
@@ -229,25 +229,25 @@ def change_password(data: schemas.ChangePasswordRequest, db: Session = Depends(d
     confirm_password = data.confirm_password.strip()
 
     if not login_id:
-        raise HTTPException(status_code=400, detail="User tidak valid")
+        raise HTTPException(status_code=400, detail="Invalid user")
 
     if not new_password:
-        raise HTTPException(status_code=400, detail="Password baru wajib diisi")
+        raise HTTPException(status_code=400, detail="New password is required")
 
     if new_password != confirm_password:
-        raise HTTPException(status_code=400, detail="Ulangi password harus sama")
+        raise HTTPException(status_code=400, detail="Passwords must match")
 
     user = db.query(models.User).filter(
         (models.User.email == login_id) | (models.User.username == login_id)
     ).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+        raise HTTPException(status_code=404, detail="User not found")
 
     user.password = auth_utils.get_password_hash(new_password)
     db.commit()
 
-    return {"message": "Password berhasil diubah"}
+    return {"message": "Password successfully changed"}
 
 
 @app.post("/api/forgot-password/send-otp")
@@ -257,7 +257,7 @@ def send_forgot_password_otp(
 ):
     email = data.email.strip().lower()
     user = db.query(models.User).filter(models.User.email == email).first()
-    generic_message = "Jika email terdaftar, kode verifikasi sudah dikirim"
+    generic_message = "If the email is registered, a verification code has been sent"
     if not user:
         return {"message": generic_message}
 
@@ -275,7 +275,7 @@ def send_forgot_password_otp(
     if recent_requests_count >= max_requests:
         raise HTTPException(
             status_code=429,
-            detail="Terlalu banyak permintaan OTP. Coba lagi beberapa menit lagi.",
+            detail="Too many OTP requests. Please try again in a few minutes.",
         )
 
     now = _now_utc()
@@ -310,7 +310,7 @@ def send_forgot_password_otp(
         db.rollback()
         raise HTTPException(
             status_code=500,
-            detail=f"Gagal mengirim OTP. Konfigurasi email belum valid. ({str(exc)})",
+            detail=f"Failed to send OTP. Email configuration is not valid. ({str(exc)})",
         )
 
     db.commit()
@@ -326,21 +326,21 @@ def verify_forgot_password_otp(
     otp = data.otp.strip()
     entry = _get_latest_active_reset_request(db, email)
     if not entry:
-        raise HTTPException(status_code=400, detail="OTP belum diminta atau sudah kedaluwarsa")
+        raise HTTPException(status_code=400, detail="OTP not requested or has expired")
 
     now = _now_utc()
     if now > entry.expires_at:
         entry.is_used = True
         entry.used_at = now
         db.commit()
-        raise HTTPException(status_code=400, detail="OTP sudah kedaluwarsa")
+        raise HTTPException(status_code=400, detail="OTP has expired")
 
     max_attempts = int(os.getenv("RESET_OTP_MAX_VERIFY_ATTEMPTS", "5"))
     if entry.attempt_count >= max_attempts:
         entry.is_used = True
         entry.used_at = now
         db.commit()
-        raise HTTPException(status_code=400, detail="OTP sudah melebihi batas percobaan")
+        raise HTTPException(status_code=400, detail="OTP verify attempts limit exceeded")
 
     if _hash_otp(email, otp) != entry.otp_hash:
         entry.attempt_count += 1
@@ -348,7 +348,7 @@ def verify_forgot_password_otp(
             entry.is_used = True
             entry.used_at = now
         db.commit()
-        raise HTTPException(status_code=400, detail="Kode OTP tidak valid")
+        raise HTTPException(status_code=400, detail="Invalid OTP code")
 
     entry.is_verified = True
     entry.verified_at = now
@@ -366,25 +366,25 @@ def reset_password_with_otp(
     confirm_password = data.confirm_password.strip()
 
     if not new_password:
-        raise HTTPException(status_code=400, detail="Password baru wajib diisi")
+        raise HTTPException(status_code=400, detail="New password is required")
     if new_password != confirm_password:
-        raise HTTPException(status_code=400, detail="Ulangi password harus sama")
+        raise HTTPException(status_code=400, detail="Passwords must match")
 
     entry = _get_latest_active_reset_request(db, email)
     if not entry:
-        raise HTTPException(status_code=400, detail="Sesi reset password tidak ditemukan")
+        raise HTTPException(status_code=400, detail="Password reset session not found")
     now = _now_utc()
     if now > entry.expires_at:
         entry.is_used = True
         entry.used_at = now
         db.commit()
-        raise HTTPException(status_code=400, detail="Sesi reset password sudah kedaluwarsa")
+        raise HTTPException(status_code=400, detail="Password reset session has expired")
     if not entry.is_verified:
-        raise HTTPException(status_code=400, detail="OTP belum diverifikasi")
+        raise HTTPException(status_code=400, detail="OTP not verified")
 
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+        raise HTTPException(status_code=404, detail="User not found")
 
     user.password = auth_utils.get_password_hash(new_password)
     db.query(models.PasswordResetRequest).filter(
@@ -399,10 +399,10 @@ def reset_password_with_otp(
     )
     db.commit()
 
-    return {"message": "Password berhasil direset"}
+    return {"message": "Password successfully reset"}
 
 # ==============================
-# --- ENDPOINT TAMBAH BUKU ---
+# --- ADD BOOK ENDPOINT ---
 # ==============================
 @app.post("/api/books")
 def create_book(
@@ -430,14 +430,14 @@ def create_book(
 
 
 # ==============================
-# --- ENDPOINT AMBIL SEMUA BUKU ---
+# --- READ ALL BOOKS ENDPOINT ---
 # ==============================
 @app.get("/api/books")
 def read_books(db: Session = Depends(database.get_db)):
     return crud.get_books(db)
 
 # ==============================
-# --- ENDPOINT UPDATE BUKU ---
+# --- UPDATE BOOK ENDPOINT ---
 # ==============================
 @app.put("/api/books/{book_id}")
 def update_book(
@@ -465,7 +465,7 @@ def update_book(
     return crud.update_book(db=db, book_id=book_id, book_data=book_data, pdf_file=file_pdf, cover_file=cover_image)
 
 # ==============================
-# --- ENDPOINT HAPUS BUKU ---
+# --- DELETE BOOK ENDPOINT ---
 # ==============================
 @app.delete("/api/books/{book_id}")
 def delete_book(book_id: int, db: Session = Depends(database.get_db)):
@@ -477,7 +477,7 @@ def get_categories(db: Session = Depends(database.get_db)):
 
 
 # ==============================
-# --- ENDPOINTS LOANS ---
+# --- LOANS ENDPOINTS ---
 # ==============================
 
 @app.post("/api/loans")
@@ -497,7 +497,7 @@ def return_book(loan_id: int, db: Session = Depends(database.get_db)):
     return crud.return_loan(db=db, loan_id=loan_id)
 
 # ==============================
-# --- ENDPOINT USER PROFILE + LOANS ---
+# --- USER PROFILE + LOANS ENDPOINT ---
 # ==============================
 @app.get("/api/admin/users")
 def get_all_users_with_loans(db: Session = Depends(database.get_db)):
@@ -516,7 +516,7 @@ def get_all_users_with_loans(db: Session = Depends(database.get_db)):
                     "author": detail.book.author_name,
                     "date": str(loan.loan_date),
                     "status": loan.status.value if loan.status else None,
-                    "dueDate": str(loan.loan_date)  # sementara samakan dulu
+                    "dueDate": str(loan.loan_date)  # placeholder for now
                 })
 
         result.append({

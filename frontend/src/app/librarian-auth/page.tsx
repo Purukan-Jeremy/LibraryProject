@@ -5,6 +5,7 @@ import { ShieldCheck, Lock, ChevronRight, Mail, User, Eye, EyeOff, ArrowLeft } f
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 export default function LibrarianAuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -35,15 +36,15 @@ export default function LibrarianAuthPage() {
       if (isLogin) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
         sessionStorage.setItem('isLibrarian', 'true');
-        alert("Access granted. Welcome to the dashboard!");
+        toast.success("Access granted. Welcome to the dashboard!");
         router.push('/dashboard');
       } else {
-        alert("Librarian account created successfully!");
+        toast.success("Librarian account created successfully!");
         setIsLogin(true);
         setFormData({ ...formData, password: '' });
       }
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Authentication failed');
+      toast.error(err.response?.data?.detail || 'Authentication failed');
     } finally {
       setLoading(false);
     }

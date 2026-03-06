@@ -5,6 +5,7 @@ import { Book, Eye, EyeOff, Mail, Lock, ChevronLeft, X } from "lucide-react";
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -99,20 +100,20 @@ export default function LoginPage() {
       }));
       setFailedLoginCount(0);
 
-      alert(`Welcome back, ${response.data.user.fullname}!`);
+      toast.success(`Welcome back, ${response.data.user.fullname}!`);
       router.replace('/librarypage');
     } catch (error: any) {
       const msg = error.response?.data?.detail || "Login failed, please check your email and password";
-      if (msg === "Email atau Password salah") {
+      if (msg === "Invalid Email or Password") {
         setFailedLoginCount((prev) => prev + 1);
       }
-      alert(msg);
+      toast.error(msg);
     }
   };
 
   const handleSendVerificationCode = async () => {
     if (!forgotEmail.trim()) {
-      alert("Email wajib diisi");
+      toast.error("Email is required");
       return;
     }
 
@@ -121,9 +122,9 @@ export default function LoginPage() {
       const response = await axios.post("http://localhost:8000/api/forgot-password/send-otp", {
         email: forgotEmail.trim(),
       });
-      alert(response.data?.message || "Kode verifikasi berhasil dikirim");
+      toast.success(response.data?.message || "Verification code successfully sent");
     } catch (error: any) {
-      alert(error.response?.data?.detail || "Gagal mengirim kode verifikasi");
+      toast.error(error.response?.data?.detail || "Failed to send verification code");
     } finally {
       setIsSendingOtp(false);
     }
@@ -132,7 +133,7 @@ export default function LoginPage() {
   const handleConfirmOtp = async () => {
     const otpCode = otpDigits.join('').trim();
     if (otpCode.length !== 6) {
-      alert("Kode OTP harus 6 digit");
+      toast.error("OTP code must be 6 digits");
       return;
     }
 
@@ -143,9 +144,9 @@ export default function LoginPage() {
         otp: otpCode.trim(),
       });
       setForgotStep("reset");
-      alert("Kode OTP valid. Silakan reset password baru.");
+      toast.success("OTP code is valid. Please reset to a new password.");
     } catch (error: any) {
-      alert(error.response?.data?.detail || "Kode OTP tidak valid");
+      toast.error(error.response?.data?.detail || "Invalid OTP code");
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -153,12 +154,12 @@ export default function LoginPage() {
 
   const handleSaveNewPassword = async () => {
     if (!newPassword.trim() || !confirmNewPassword.trim()) {
-      alert("Password baru dan konfirmasi wajib diisi");
+      toast.error("New password and confirmation are required");
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      alert("Password baru dan konfirmasi password harus sama");
+      toast.error("New password and confirmation password must match");
       return;
     }
 
@@ -170,11 +171,11 @@ export default function LoginPage() {
         confirm_password: confirmNewPassword,
       });
 
-      alert(response.data?.message || "Password berhasil direset");
+      toast.success(response.data?.message || "Password successfully reset");
       closeForgotPasswordModal();
       setFailedLoginCount(0);
     } catch (error: any) {
-      alert(error.response?.data?.detail || "Gagal reset password");
+      toast.error(error.response?.data?.detail || "Failed to reset password");
     } finally {
       setIsResettingPassword(false);
     }
@@ -278,8 +279,8 @@ export default function LoginPage() {
                 </h2>
                 <p className="text-sm text-stone-500 mt-1">
                   {forgotStep === "otp"
-                    ? "Masukkan email terdaftar, kirim OTP, lalu verifikasi kode."
-                    : "Masukkan password baru untuk akun ini."}
+                    ? "Enter your registered email, send OTP, and then verify the code."
+                    : "Enter a new password for this account."}
                 </p>
               </div>
               <button

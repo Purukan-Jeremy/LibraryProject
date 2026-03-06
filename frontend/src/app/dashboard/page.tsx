@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import AdminNavbar from "@/components/AdminNavbar";
 import withLibrarianAuth from "@/components/withLibrarianAuth";
 
@@ -48,7 +49,7 @@ function LibrarianDashboard() {
     author_name: "",
   });
 
-  //Search bar
+  // Search bar
   const filteredBooks = books.filter((book) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -57,7 +58,7 @@ function LibrarianDashboard() {
     );
   });
 
-  // ================= STATE DROPDOWN CATEGORY =================
+  // ================= CATEGORY DROPDOWN STATE =================
   const [categories, setCategories] = useState<
     { id: number; category_name: string }[]
   >([]);
@@ -72,11 +73,11 @@ function LibrarianDashboard() {
       const data = await response.json();
       setCategories(data);
     } catch (error) {
-      console.error("Gagal mengambil categories:", error);
+      console.error("Failed to fetch categories:", error);
     }
   };
 
-  // ================= FETCH BUKU DARI BACKEND =================
+  // ================= FETCH BOOKS FROM BACKEND =================
   const fetchBooks = async () => {
     try {
       const response = await fetch("http://127.0.0.1:8000/api/books");
@@ -98,11 +99,11 @@ function LibrarianDashboard() {
       setBooks(formattedBooks);
     } catch (error) {
       console.error(error);
-      alert("Failed to fetch book list from server");
+      toast.error("Failed to fetch book list from server");
     }
   };
 
-  // ================= TUTUP DROPDOWN JIKA KLIK DI LUAR =================
+  // ================= CLOSE DROPDOWN IF CLICKED OUTSIDE =================
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -116,7 +117,7 @@ function LibrarianDashboard() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ================= HANDLE CHANGE FORM =================
+  // ================= HANDLE FORM CHANGE =================
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -129,24 +130,24 @@ function LibrarianDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validasi content-type
+    // Content-type validation
     if (file.type !== "application/pdf") {
-      alert(" Only PDF files are allowed!");
+      toast.error(" Only PDF files are allowed!");
       e.target.value = "";
       return;
     }
 
-    // Validasi ekstensi
+    // Extension validation
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      alert("File extension must be .pdf!");
+      toast.error("File extension must be .pdf!");
       e.target.value = "";
       return;
     }
 
-    // Validasi ukuran file
+    // File size validation
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert(" Maximum file size is 10MB!");
+      toast.error(" Maximum file size is 10MB!");
       e.target.value = "";
       return;
     }
@@ -154,14 +155,14 @@ function LibrarianDashboard() {
     setFormData({ ...formData, file_pdf: file });
   };
 
-  // ================= HANDLE PILIH CATEGORY DARI DROPDOWN =================
+  // ================= HANDLE SELECT CATEGORY FROM DROPDOWN =================
   const handleSelectCategory = (categoryName: string) => {
     setFormData({ ...formData, category_name: categoryName });
     setCategorySearch("");
     setIsCategoryOpen(false);
   };
 
-  // ================= FILTER CATEGORY BERDASARKAN SEARCH =================
+  // ================= FILTER CATEGORY BASED ON SEARCH =================
   const filteredCategories = categories.filter((c) =>
     c.category_name.toLowerCase().includes(categorySearch.toLowerCase()),
   );
@@ -186,7 +187,7 @@ function LibrarianDashboard() {
     setIsModalOpen(true);
   };
 
-  // ================= TAMBAH / UPDATE BUKU =================
+  // ================= ADD / UPDATE BOOK =================
   const handleSubmit = async () => {
     try {
       const url = isEditing
@@ -195,7 +196,7 @@ function LibrarianDashboard() {
 
       const method = isEditing ? "PUT" : "POST";
 
-      // ← diubah: pakai FormData bukan JSON karena ada file upload
+      // use FormData due to file upload
       const fd = new FormData();
       fd.append("isbn", formData.isbn);
       fd.append("title", formData.title);
@@ -213,18 +214,18 @@ function LibrarianDashboard() {
 
       const response = await fetch(url, {
         method: method,
-        // ⚠️ JANGAN set Content-Type — browser otomatis set multipart/form-data
+        // DO NOT set Content-Type — browser automatically sets multipart/form-data
         body: fd,
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.detail || "Failed to save book");
+        toast.error(result.detail || "Failed to save book");
         return;
       }
 
-      alert(
+      toast.success(
         isEditing ? "Book successfully updated!" : "Book successfully saved!",
       );
       setIsModalOpen(false);
@@ -233,7 +234,7 @@ function LibrarianDashboard() {
 
       // Refresh data
       fetchBooks();
-      fetchCategories(); // refresh list category setelah tambah/edit buku
+      fetchCategories(); // refresh category list after adding/editing book
 
       // reset form
       setFormData({
@@ -251,11 +252,11 @@ function LibrarianDashboard() {
       });
     } catch (error) {
       console.error(error);
-      showToast("Could not connect to server", "error");
+      toast.error("Could not connect to server");
     }
   };
 
-  // ================= HAPUS BUKU =================
+  // ================= DELETE BOOK =================
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this book?")) return;
 
@@ -266,15 +267,15 @@ function LibrarianDashboard() {
 
       if (!response.ok) {
         const result = await response.json();
-        showToast(result.detail || "Failed to delete book", "error");
+        toast.error(result.detail || "Failed to delete book");
         return;
       }
 
       setBooks((prev) => prev.filter((book) => book.id !== id));
-      alert("Book successfully deleted!");
+      toast.success("Book successfully deleted!");
     } catch (error) {
       console.error(error);
-      alert("Could not connect to server");
+      toast.error("Could not connect to server");
     }
   };
 
@@ -321,7 +322,7 @@ function LibrarianDashboard() {
           </button>
         </div>
 
-        {/* Tabel Buku */}
+        {/* Book Table */}
         <div className="bg-white rounded-[2.5rem] border border-stone-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-stone-100 flex items-center justify-between flex-wrap gap-4">
             <h3 className="font-serif font-bold text-xl">
@@ -379,7 +380,7 @@ function LibrarianDashboard() {
                       </td>
                       <td className="py-4 px-4">
                         <span className="px-3 py-1 bg-orange-50 text-orange-800 rounded-full text-xs font-bold">
-                          {book.stock} unit
+                          {book.stock} units
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -406,8 +407,7 @@ function LibrarianDashboard() {
                       <div className="flex flex-col items-center opacity-30">
                         <Search className="w-12 h-12 mb-2" />
                         <p className="text-sm italic">
-                          Buku dengan kata kunci "{searchQuery}" tidak
-                          ditemukan.
+                          Book with keyword "{searchQuery}" not found.
                         </p>
                       </div>
                     </td>
@@ -419,7 +419,7 @@ function LibrarianDashboard() {
         </div>
       </main>
 
-      {/* Modal Tambah/Edit Buku */}
+      {/* Add/Edit Book Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-xl p-8 relative">
@@ -452,7 +452,6 @@ function LibrarianDashboard() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Input teks biasa — sama persis seperti semula, minus category_name */}
               {[
                 { name: "isbn", placeholder: "ISBN" },
                 { name: "title", placeholder: "Book Title" },
@@ -491,7 +490,7 @@ function LibrarianDashboard() {
                 />
               </div>
 
-              {/* ===== DROPDOWN + SEARCH CATEGORY ===== */}
+              {/* ===== CATEGORY DROPDOWN + SEARCH ===== */}
               <div className="relative" ref={categoryRef}>
                 <button
                   type="button"
@@ -508,7 +507,7 @@ function LibrarianDashboard() {
                         : "text-stone-400"
                     }
                   >
-                    {formData.category_name || "Pilih Category"}
+                    {formData.category_name || "Select Category"}
                   </span>
                   <ChevronDown
                     className={`w-4 h-4 text-stone-400 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`}
@@ -518,13 +517,13 @@ function LibrarianDashboard() {
                 {/* Dropdown Panel */}
                 {isCategoryOpen && (
                   <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden">
-                    {/* Search input di dalam dropdown */}
+                    {/* Search input inside dropdown */}
                     <div className="p-2 border-b border-stone-100">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400" />
                         <input
                           type="text"
-                          placeholder="Cari category..."
+                          placeholder="Search category..."
                           value={categorySearch}
                           onChange={(e) => setCategorySearch(e.target.value)}
                           className="w-full pl-8 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-800/10"
@@ -533,7 +532,7 @@ function LibrarianDashboard() {
                       </div>
                     </div>
 
-                    {/* List hasil filter */}
+                    {/* Filtered list results */}
                     <ul className="max-h-44 overflow-y-auto">
                       {filteredCategories.length > 0 ? (
                         filteredCategories.map((c) => (
@@ -554,7 +553,7 @@ function LibrarianDashboard() {
                           className="px-4 py-2.5 text-sm cursor-pointer text-orange-700 hover:bg-orange-50 transition-colors flex items-center gap-2"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          Buat category "
+                          Create category "
                           <span className="font-semibold">
                             {categorySearch}
                           </span>
@@ -567,7 +566,7 @@ function LibrarianDashboard() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-stone-600 mb-2">
-                  File PDF{" "}
+                  PDF File{" "}
                   <span className="font-normal text-stone-400">
                     (max. 10MB, only .pdf)
                   </span>
@@ -644,7 +643,7 @@ function LibrarianDashboard() {
                     const file = e.target.files?.[0];
                     if (file) {
                        if (file.size > 5 * 1024 * 1024) {
-                         alert("❌ Maximum image size is 5MB!");
+                         toast.error("❌ Maximum image size is 5MB!");
                          e.target.value = "";
                          return;
                        }
@@ -656,7 +655,7 @@ function LibrarianDashboard() {
                     file:bg-orange-800 file:text-white file:text-sm file:font-semibold file:cursor-pointer cursor-pointer"
                 />
 
-                {/* Preview cover yang baru dipilih */}
+                {/* Preview of newly selected cover */}
                 {formData.cover_image && (
                   <div className="flex items-center gap-4 mt-3 p-3 bg-green-50 rounded-2xl border border-green-100">
                     <div className="w-16 h-20 rounded-lg overflow-hidden border border-green-200 shadow-sm bg-white">

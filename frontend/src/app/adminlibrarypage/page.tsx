@@ -9,10 +9,10 @@ import withLibrarianAuth from "@/components/withLibrarianAuth";
 function AdminLibraryPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // --- STATE BUKU ---
+  // --- BOOK STATE ---
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null);
-  const [categories, setCategories] = useState<string[]>(["Semua Kategori"]);
+  const [categories, setCategories] = useState<string[]>(["All Categories"]);
 
   // Fetch books
   const fetchBooks = async () => {
@@ -35,7 +35,7 @@ function AdminLibraryPage() {
 
       setAllBooks(formattedBooks);
     } catch (error) {
-      console.error("Gagal mengambil buku:", error);
+      console.error("Failed to fetch books:", error);
     }
   };
 
@@ -44,9 +44,9 @@ function AdminLibraryPage() {
       const response = await fetch("http://127.0.0.1:8000/api/categories");
       const data = await response.json();
       const catNames = data.map((c: any) => c.category_name);
-      setCategories(["Semua Kategori", ...catNames]);
+      setCategories(["All Categories", ...catNames]);
     } catch (error) {
-      console.error("Gagal mengambil categories:", error);
+      console.error("Failed to fetch categories:", error);
     }
   };
 
@@ -56,11 +56,11 @@ function AdminLibraryPage() {
   }, []);
   
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("Semua Kategori");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
 
   const filteredBooks = allBooks.filter((book) => {
     const matchCategory =
-      selectedCategory === "Semua Kategori" ||
+      selectedCategory === "All Categories" ||
       book.category === selectedCategory;
 
     const matchSearch =
@@ -78,10 +78,10 @@ function AdminLibraryPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-serif font-bold text-stone-900">
-              Katalog Buku
+              Book Catalog
             </h1>
             <p className="text-stone-500 mt-1">
-              Admin Mode: Pantau koleksi buku perpustakaan
+              Admin Mode: Monitor library book collection
             </p>
           </div>
 
@@ -90,7 +90,7 @@ function AdminLibraryPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300 group-focus-within:text-orange-800 transition-colors" />
               <input
                 type="text"
-                placeholder="Cari judul atau penulis..."
+                placeholder="Search by title or author..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 pr-6 py-3 bg-white border border-stone-200 rounded-2xl w-full md:w-80 outline-none focus:ring-4 focus:ring-orange-800/5 focus:border-orange-800/20 transition-all shadow-sm"
@@ -119,7 +119,7 @@ function AdminLibraryPage() {
                   <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-stone-100 rounded-[2rem] shadow-2xl z-20 p-6 animate-in fade-in zoom-in-95 duration-200">
                     <div className="mb-4">
                       <label className="text-[10px] font-black uppercase text-stone-400 ml-1 mb-2 block">
-                        Kategori
+                        Category
                       </label>
                       <select
                         value={selectedCategory}
@@ -135,10 +135,10 @@ function AdminLibraryPage() {
                     </div>
 
                     <button
-                      onClick={() => setSelectedCategory("Semua Kategori")}
+                      onClick={() => setSelectedCategory("All Categories")}
                       className="w-full py-2 text-[10px] font-bold text-orange-800 uppercase hover:bg-orange-50 rounded-lg transition-colors"
                     >
-                      Reset Filter
+                      Reset Filters
                     </button>
                   </div>
                 </>
@@ -147,7 +147,7 @@ function AdminLibraryPage() {
           </div>
         </div>
 
-        {/* GRID BUKU */}
+        {/* BOOK GRID */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {filteredBooks.length > 0 ? (
             filteredBooks.map((book) => (
@@ -167,7 +167,7 @@ function AdminLibraryPage() {
                     <>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                       <div className="flex items-center justify-center h-full text-stone-400 italic text-sm text-center px-4">
-                        Sampul {book.title}
+                        Cover of {book.title}
                       </div>
                     </>
                   )}
@@ -182,7 +182,7 @@ function AdminLibraryPage() {
             ))
           ) : (
             <div className="col-span-full py-20 text-center text-stone-400 italic">
-              Buku tidak ditemukan dengan kriteria tersebut.
+              Books not found with those criteria.
             </div>
           )}
         </div>

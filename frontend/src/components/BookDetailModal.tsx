@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { toast } from "sonner";
 import { Book, X, Building2, Barcode, BookOpen, CheckCircle2, Heart } from "lucide-react";
 
 interface BookDetailModalProps {
@@ -23,7 +24,7 @@ export default function BookDetailModal({ selectedBook, setSelectedBook, handleB
 
       {/* Modal Content */}
       <div className="relative bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col md:flex-row max-h-[90vh]">
-        {/* Tombol Close */}
+        {/* Close Button */}
         <button
           onClick={() => setSelectedBook(null)}
           className="absolute top-6 right-6 z-10 p-2 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors"
@@ -31,7 +32,7 @@ export default function BookDetailModal({ selectedBook, setSelectedBook, handleB
           <X className="w-5 h-5 text-stone-600" />
         </button>
 
-        {/* Kiri: Cover & Visual */}
+        {/* Left: Cover & Visual */}
         <div className="w-full md:w-2/5 bg-stone-100 p-8 md:p-12 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 bg-stone-200/50" />
           <div className="relative w-48 aspect-[3/4] bg-white rounded-2xl shadow-xl flex items-center justify-center text-center overflow-hidden z-0">
@@ -55,7 +56,7 @@ export default function BookDetailModal({ selectedBook, setSelectedBook, handleB
           </div>
         </div>
 
-        {/* Kanan: Detail Informasi */}
+        {/* Right: Information Details */}
         <div className="w-full md:w-3/5 p-8 md:p-12 overflow-y-auto">
           <div className="mb-6">
             <div className="flex gap-2 mb-3">
@@ -70,7 +71,7 @@ export default function BookDetailModal({ selectedBook, setSelectedBook, handleB
               <span
                 className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedBook.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
               >
-                {selectedBook.stock > 0 ? "Tersedia" : "Stok Habis"}
+                {selectedBook.stock > 0 ? "Available" : "Out of Stock"}
               </span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-2 leading-tight">
@@ -85,7 +86,7 @@ export default function BookDetailModal({ selectedBook, setSelectedBook, handleB
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
               <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
-                <Building2 className="w-3 h-3" /> Penerbit
+                <Building2 className="w-3 h-3" /> Publisher
               </p>
               <p
                 className="text-sm font-bold text-stone-800 truncate"
@@ -104,17 +105,17 @@ export default function BookDetailModal({ selectedBook, setSelectedBook, handleB
             </div>
             <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
               <p className="text-[10px] font-black uppercase text-stone-400 mb-1 flex items-center gap-1.5">
-                <BookOpen className="w-3 h-3" /> Stok Buku
+                <BookOpen className="w-3 h-3" /> Book Stock
               </p>
               <p className="text-sm font-bold text-stone-800">
-                {selectedBook.stock} Eksemplar
+                {selectedBook.stock} Copies
               </p>
             </div>
           </div>
 
-          {/* Sinopsis */}
+          {/* Synopsis */}
           <div className="mb-8">
-            <h3 className="font-bold text-stone-900 mb-2">Sinopsis</h3>
+            <h3 className="font-bold text-stone-900 mb-2">Synopsis</h3>
             <p className="text-stone-600 text-sm leading-relaxed">
               {selectedBook.synopsis}
             </p>
@@ -129,11 +130,11 @@ export default function BookDetailModal({ selectedBook, setSelectedBook, handleB
                 disabled={selectedBook.stock === 0}
               >
                 <CheckCircle2 className="w-5 h-5" />
-                {selectedBook.stock > 0 ? "Pinjam Buku Ini" : "Stok Habis"}
+                {selectedBook.stock > 0 ? "Borrow This Book" : "Out of Stock"}
               </button>
               <button
                 className="px-6 py-4 bg-stone-100 text-stone-500 hover:bg-red-50 hover:text-red-500 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 group"
-                onClick={() => alert("Ditambahkan ke favorit")}
+                onClick={() => toast.info("Added to favorites")}
               >
                 <Heart className="w-5 h-5 group-hover:fill-current" />
               </button>

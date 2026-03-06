@@ -3,34 +3,34 @@ from fastapi import HTTPException, status, UploadFile
 from . import models
 import shutil, os, uuid
 
-# ================= DIREKTORI UPLOAD PDF =================
+# ================= PDF UPLOAD DIRECTORY =================
 UPLOAD_DIR = "uploads/pdf"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# ================= DIREKTORI UPLOAD COVER =================
+# ================= COVER UPLOAD DIRECTORY =================
 COVER_DIR = "uploads/cover"
 os.makedirs(COVER_DIR, exist_ok=True)
 
 
-# ================= HELPER: SIMPAN FILE PDF =================
+# ================= HELPER: SAVE PDF FILE =================
 def save_pdf_file(file: UploadFile) -> str:
-    """Validasi ekstensi & content-type, lalu simpan PDF ke disk. Return nama file unik."""
+    """Validate extension & content-type, then save PDF to disk. Returns unique filename."""
 
-    # Validasi content-type
+    # Validate content-type
     if file.content_type != "application/pdf":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Hanya file PDF yang diperbolehkan (content-type bukan application/pdf)"
+            detail="Only PDF files are allowed (content-type is not application/pdf)"
         )
 
-    # Validasi ekstensi
+    # Validate extension
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ekstensi file harus .pdf"
+            detail="File extension must be .pdf"
         )
 
-    # Generate nama file unik agar tidak bentrok
+    # Generate unique filename to avoid collisions
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
@@ -40,14 +40,14 @@ def save_pdf_file(file: UploadFile) -> str:
     return unique_filename
 
 
-# ================= HELPER: SIMPAN FILE COVER =================
+# ================= HELPER: SAVE COVER FILE =================
 def save_cover_file(file: UploadFile) -> str:
-    """Simpan Cover Image ke disk. Return nama file unik."""
-    # Validasi content-type (opsional tapi disarankan)
+    """Save Cover Image to disk. Returns unique filename."""
+    # Validate content-type
     if not file.content_type.startswith("image/"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Hanya file gambar yang diperbolehkan untuk cover"
+            detail="Only image files are allowed for the cover"
         )
 
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
@@ -61,15 +61,15 @@ def save_cover_file(file: UploadFile) -> str:
 
 # ================= CREATE BOOK =================
 def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None, cover_file: UploadFile = None):
-    # 0. Cek apakah ISBN sudah terdaftar
+    # 0. Check if ISBN is already registered
     existing_book = db.query(models.Book).filter(models.Book.isbn == book_data["isbn"]).first()
     if existing_book:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Buku dengan ISBN {book_data['isbn']} sudah terdaftar"
+            detail=f"Book with ISBN {book_data['isbn']} is already registered"
         )
 
-    # 1. Cari atau buat category
+    # 1. Find or create category
     category_name = book_data.get("category_name")
     if category_name:
         db_category = db.query(models.Category).filter(
@@ -81,7 +81,7 @@ def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None, cover
             db.commit()
             db.refresh(db_category)
 
-    # 2. Cari atau buat publisher
+    # 2. Find or create publisher
     publisher_name = book_data.get("publisher_name")
     if publisher_name:
         db_publisher = db.query(models.Publisher).filter(
@@ -93,7 +93,7 @@ def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None, cover
             db.commit()
             db.refresh(db_publisher)
 
-    # 3. Cari atau buat author
+    # 3. Find or create author
     db_author = db.query(models.Author).filter(
         models.Author.author_name == book_data["author_name"]
     ).first()
@@ -103,17 +103,17 @@ def create_book(db: Session, book_data: dict, pdf_file: UploadFile = None, cover
         db.commit()
         db.refresh(db_author)
 
-    # 4. Simpan file PDF jika ada
+    # 4. Save PDF file if provided
     pdf_filename = None
     if pdf_file:
         pdf_filename = save_pdf_file(pdf_file)
 
-    # 5. Simpan file Cover jika ada
+    # 5. Save Cover file if provided
     cover_filename = None
     if cover_file:
         cover_filename = save_cover_file(cover_file)
 
-    # 6. Simpan buku ke database
+    # 6. Save book to database
     db_book = models.Book(
         isbn=book_data["isbn"],
         title=book_data["title"],
@@ -153,15 +153,15 @@ def get_books(db: Session):
 
 # ================= UPDATE BOOK =================
 def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile = None, cover_file: UploadFile = None):
-    # 1. Cari buku
+    # 1. Find book
     db_book = db.query(models.Book).filter(models.Book.id == book_id).first()
     if not db_book:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Buku dengan ID {book_id} tidak ditemukan"
+            detail=f"Book with ID {book_id} not found"
         )
 
-    # 2. Handle perubahan Category
+    # 2. Handle Category change
     old_category_name = db_book.category_name
     new_category_name = book_data.get("category_name")
     if new_category_name:
@@ -175,7 +175,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
             db.refresh(db_category)
         db_book.category_name = db_category.category_name
 
-    # 3. Handle perubahan Publisher
+    # 3. Handle Publisher change
     old_publisher_name = db_book.publisher_name
     new_publisher_name = book_data.get("publisher_name")
     if new_publisher_name:
@@ -189,7 +189,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
             db.refresh(db_publisher)
         db_book.publisher_name = db_publisher.publisher_name
 
-    # 4. Handle perubahan Author
+    # 4. Handle Author change
     old_author_name = db_book.author_name
     new_author_name = book_data.get("author_name")
     if new_author_name:
@@ -203,7 +203,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
             db.refresh(db_author)
         db_book.author_name = db_author.author_name
 
-    # 5. Handle PDF baru — hapus file lama jika ada
+    # 5. Handle new PDF — delete old file if exists
     if pdf_file:
         if db_book.file_pdf:
             old_path = os.path.join(UPLOAD_DIR, db_book.file_pdf)
@@ -211,7 +211,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
                 os.remove(old_path)
         db_book.file_pdf = save_pdf_file(pdf_file)
 
-    # 6. Handle Cover baru — hapus file lama jika ada
+    # 6. Handle new Cover — delete old file if exists
     if cover_file:
         if db_book.cover_image:
             old_cover_path = os.path.join(COVER_DIR, db_book.cover_image)
@@ -219,7 +219,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
                 os.remove(old_cover_path)
         db_book.cover_image = save_cover_file(cover_file)
 
-    # 7. Update field lainnya
+    # 7. Update other fields
     db_book.isbn = book_data["isbn"]
     db_book.title = book_data["title"]
     db_book.description = book_data.get("description")
@@ -228,8 +228,8 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
     db.commit()
     db.refresh(db_book)
 
-    # 8. Bersihkan data lama jika tidak punya buku lain (Opsional, tapi konsisten)
-    # Bersihkan author lama
+    # 8. Clean up old data if no other books are linked (Optional but consistent)
+    # Clean up old author
     if old_author_name and old_author_name != new_author_name:
         other_books = db.query(models.Book).filter(
             models.Book.author_name == old_author_name
@@ -242,7 +242,7 @@ def update_book(db: Session, book_id: int, book_data: dict, pdf_file: UploadFile
                 db.delete(db_old_author)
                 db.commit()
 
-    # Bersihkan publisher lama
+    # Clean up old publisher
     if old_publisher_name and old_publisher_name != new_publisher_name:
         other_books = db.query(models.Book).filter(
             models.Book.publisher_name == old_publisher_name
@@ -264,20 +264,20 @@ def delete_book(db: Session, book_id: int):
     if not db_book:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Buku dengan ID {book_id} tidak ditemukan"
+            detail=f"Book with ID {book_id} not found"
         )
 
     author_name = db_book.author_name
     category_name = db_book.category_name
     publisher_name = db_book.publisher_name
 
-    # Hapus file PDF dari disk jika ada
+    # Delete PDF file from disk if exists
     if db_book.file_pdf:
         file_path = os.path.join(UPLOAD_DIR, db_book.file_pdf)
         if os.path.exists(file_path):
             os.remove(file_path)
 
-    # Hapus file Cover dari disk jika ada
+    # Delete Cover file from disk if exists
     if db_book.cover_image:
         cover_path = os.path.join(COVER_DIR, db_book.cover_image)
         if os.path.exists(cover_path):
@@ -286,7 +286,7 @@ def delete_book(db: Session, book_id: int):
     db.delete(db_book)
     db.commit()
 
-    # Hapus author jika tidak punya buku lain
+    # Delete author if no other books are linked
     if author_name:
         other_books = db.query(models.Book).filter(
             models.Book.author_name == author_name
@@ -299,7 +299,7 @@ def delete_book(db: Session, book_id: int):
                 db.delete(db_author)
                 db.commit()
 
-    # Hapus publisher jika tidak punya buku lain
+    # Delete publisher if no other books are linked
     if publisher_name:
         other_books = db.query(models.Book).filter(
             models.Book.publisher_name == publisher_name
@@ -312,7 +312,7 @@ def delete_book(db: Session, book_id: int):
                 db.delete(db_old_publisher)
                 db.commit()
 
-    return {"detail": "Buku berhasil dihapus"}
+    return {"detail": "Book successfully deleted"}
 
 # ================= GET ALL CATEGORIES =================
 def get_categories(db: Session):
@@ -324,7 +324,7 @@ def get_categories(db: Session):
 from datetime import date
 
 def create_loan(db: Session, user_id: int, book_ids: list[int]):
-    # 1. Buat record Loan baru
+    # 1. Create new Loan record
     db_loan = models.Loan(
         user_id=user_id,
         loan_date=date.today(),
@@ -334,19 +334,19 @@ def create_loan(db: Session, user_id: int, book_ids: list[int]):
     db.commit()
     db.refresh(db_loan)
 
-    # 2. Buat LoanDetails dan kurangi stok buku
+    # 2. Create LoanDetails and reduce book stock
     for book_id in book_ids:
         db_book = db.query(models.Book).filter(models.Book.id == book_id).first()
         if not db_book:
             continue
         
         if db_book.stock <= 0:
-            raise HTTPException(status_code=400, detail=f"Buku {db_book.title} sedang habis stok")
+            raise HTTPException(status_code=400, detail=f"Book {db_book.title} is out of stock")
         
-        # Kurangi stok
+        # Reduce stock
         db_book.stock -= 1
         
-        # Tambah detail loan
+        # Add loan detail
         db_detail = models.LoanDetail(
             loan_id=db_loan.id,
             book_id=book_id,
@@ -405,18 +405,18 @@ def get_all_loans(db: Session):
     return result
 
 def return_loan(db: Session, loan_id: int):
-    # 1. Cari loan
+    # 1. Find loan
     db_loan = db.query(models.Loan).filter(models.Loan.id == loan_id).first()
     if not db_loan:
-        raise HTTPException(status_code=404, detail="Data pinjaman tidak ditemukan")
+        raise HTTPException(status_code=404, detail="Loan record not found")
 
-    # 2. Kembalikan stok untuk setiap buku dalam loan ini
+    # 2. Restore stock for each book in this loan
     for detail in db_loan.details:
         db_book = db.query(models.Book).filter(models.Book.id == detail.book_id).first()
         if db_book:
             db_book.stock += detail.quantity
     
-    # 3. Hapus record loan (karena user minta dihapus dari history)
+    # 3. Delete loan record (per user request to remove from history)
     db.delete(db_loan)
     db.commit()
-    return {"message": "Buku berhasil dikembalikan dan riwayat dihapus"}
+    return {"message": "Book successfully returned and history removed"}
