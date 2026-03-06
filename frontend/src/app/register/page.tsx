@@ -5,6 +5,7 @@ import { Book, Eye, EyeOff, Mail, Lock, User, AtSign, ChevronLeft } from "lucide
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,15 +25,15 @@ export default function RegisterPage() {
       username: formData.username,
       email: formData.email,
       password: formData.password,
-      role_id: 2 // Otomatis sebagai User
+      role_id: 2 // Automatically as User
     };
 
     await axios.post("http://localhost:8000/api/register", payload);
-    alert("Account successfully created! Please login.");
+    toast.success("Account successfully created! Please login.");
     router.push('/login');
   } catch (error: any) {
     const detailError = error.response?.data?.detail;
-    alert(detailError || "Registration failed: Make sure the Backend is running");
+    toast.error(detailError || "Registration failed: Make sure the Backend is running");
   }
 };
 

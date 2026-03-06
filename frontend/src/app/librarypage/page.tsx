@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Filter } from "lucide-react";
+import { toast } from "sonner";
 import UserNavbar from "@/components/UserNavbar";
 import BookDetailModal from "@/components/BookDetailModal";
 import SuccessModal from "@/components/SuccessModal";
@@ -12,7 +13,7 @@ export default function LibraryPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // --- STATE BUKU ---
+  // --- BOOK STATE ---
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -39,7 +40,7 @@ export default function LibraryPage() {
 
       setAllBooks(formattedBooks);
     } catch (error) {
-      console.error("Gagal mengambil buku:", error);
+      console.error("Failed to fetch books:", error);
     }
   };
 
@@ -50,7 +51,7 @@ export default function LibraryPage() {
       const catNames = data.map((c: any) => c.category_name);
       setCategories(["All Categories", ...catNames]);
     } catch (error) {
-      console.error("Gagal mengambil categories:", error);
+      console.error("Failed to fetch categories:", error);
     }
   };
 
@@ -82,7 +83,7 @@ export default function LibraryPage() {
     return matchCategory && matchYear && matchSearch;
   });
 
-  // --- FUNGSI PINJAM BUKU ---
+  // --- BORROW BOOK FUNCTION ---
   const handleBorrowBook = async () => {
     if (!user || !selectedBook) {
       console.log("Borrow failed: User or Book not selected", { user, selectedBook });
@@ -103,18 +104,18 @@ export default function LibraryPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Gagal meminjam buku");
+        throw new Error(errorData.detail || "failed to borrow book");
       }
 
       setSelectedBook(null);
       setTimeout(() => setShowSuccessModal(true), 150);
       fetchBooks();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 
-  // Proteksi Halaman & Load User
+  // Page Protection & User Loading
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (!savedUser) {
@@ -229,7 +230,7 @@ export default function LibraryPage() {
                     <>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                       <div className="flex items-center justify-center h-full text-stone-400 italic text-sm text-center px-4">
-                        Sampul {book.title}
+                        Cover of {book.title}
                       </div>
                     </>
                   )}

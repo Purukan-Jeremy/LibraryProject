@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Book,
   LibraryBig,
@@ -66,7 +67,7 @@ export default function UserNavbar({ user, setUser }: UserNavbarProps) {
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
     setIsEditing(false);
-    alert("Profile successfully updated!");
+    toast.success("Profile successfully updated!");
   };
 
   const handleStartEditProfile = () => {
@@ -97,12 +98,12 @@ export default function UserNavbar({ user, setUser }: UserNavbarProps) {
 
   const handleChangePassword = async () => {
     if (newPassword.trim() === "" || repeatNewPassword.trim() === "") {
-      alert("Password baru dan ulangi password wajib diisi");
+      toast.error("New password and repeat password are required");
       return;
     }
 
     if (newPassword !== repeatNewPassword) {
-      alert("Password baru dan ulangi password harus sama");
+      toast.error("New password and repeat password must match");
       return;
     }
 
@@ -122,7 +123,7 @@ export default function UserNavbar({ user, setUser }: UserNavbarProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.detail || "Gagal mengubah password");
+        throw new Error(data?.detail || "Failed to change password");
       }
 
       setNewPassword("");
@@ -130,9 +131,9 @@ export default function UserNavbar({ user, setUser }: UserNavbarProps) {
       setShowNewPassword(false);
       setShowRepeatNewPassword(false);
       setIsForgetPasswordOpen(false);
-      alert("Password berhasil diubah. Silakan login dengan password baru.");
+      toast.success("Password successfully changed. Please login with your new password.");
     } catch (error: any) {
-      alert(error.message || "Gagal mengubah password");
+      toast.error(error.message || "Failed to change password");
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -357,7 +358,7 @@ export default function UserNavbar({ user, setUser }: UserNavbarProps) {
               Change Password
             </h3>
             <p className="text-sm text-stone-500 mb-6">
-              Masukkan password baru, lalu ulangi password baru.
+              Enter your new password, then repeat it.
             </p>
 
             <div className="space-y-4">
